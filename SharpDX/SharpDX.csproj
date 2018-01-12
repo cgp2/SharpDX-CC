@@ -83,6 +83,7 @@
     <Compile Include="Components\BoxComponent.cs" />
     <Compile Include="Components\CameraComponent.cs" />
     <Compile Include="Components\CircleComponent.cs" />
+    <Compile Include="Components\CubeComponentTextured.cs" />
     <Compile Include="Games\TexturingGame.cs" />
     <Compile Include="TextureLoader.cs" />
     <Compile Include="Components\CubeComponent.cs" />

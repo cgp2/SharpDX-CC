@@ -52,7 +52,6 @@ namespace SharpDX.Games
 
             deviceContext.VertexShader.Set(vertexShader);
             deviceContext.PixelShader.Set(pixelShader);
-            //shaders.hlsl
 
             inputLayout = new InputLayout(device, inputSignature, inputElements);
             deviceContext.InputAssembler.InputLayout = inputLayout;
@@ -84,14 +83,13 @@ namespace SharpDX.Games
 
         public void Run()
         {
-
             deviceContext.Rasterizer.SetViewport(new Viewport(0, 0, renderForm.ClientSize.Width, renderForm.ClientSize.Height, 0.0f, 1.0f));
             deviceContext.OutputMerger.SetTargets(depthView, renderTargetView);      
 
             trg = new TriangleComponent(device);
             trg.WorldPosition = new Vector3(0, 0f, 0);
             trg.Update();
-            trg.Scaling = Matrix.Scaling(4f);      
+            trg.Scaling = Matrix.Scaling(10);      
             
             var texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "text.png"));
             ShaderResourceView textureView = new ShaderResourceView(device, texture);

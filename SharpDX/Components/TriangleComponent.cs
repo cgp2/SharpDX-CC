@@ -18,6 +18,7 @@ namespace SharpDX.Components
         Texture2D texture;
         ShaderResourceView textureView;
         SamplerStateDescription samplerStateDescription;
+        SamplerState sampler;
 
         public TriangleComponent(Direct3D11.Device device)
         {
@@ -29,7 +30,6 @@ namespace SharpDX.Components
                 new Vector4(0.5f, 0.5f, 0.0f, 1.0f), Color.Blue.ToVector4(),
                 new Vector4(0.0f, -0.5f, 0.0f, 1.0f), Color.Green.ToVector4(),
             };
-
 
             textCoords = new Vector2[]
             {
@@ -50,7 +50,6 @@ namespace SharpDX.Components
 
             texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "1t.png"));
             textureView = new ShaderResourceView(device, texture);
-
             samplerStateDescription = new SamplerStateDescription
             {
                 AddressU = TextureAddressMode.Wrap,
@@ -58,6 +57,7 @@ namespace SharpDX.Components
                 AddressW = TextureAddressMode.Wrap,
                 Filter = Filter.MinMagPointMipLinear
             };
+            sampler = new SamplerState(device, samplerStateDescription);
 
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
             constantBuffer = new Direct3D11.Buffer(device, SharpDX.Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, Direct3D11.BindFlags.ConstantBuffer, Direct3D11.CpuAccessFlags.None, Direct3D11.ResourceOptionFlags.None, 0);
@@ -89,17 +89,6 @@ namespace SharpDX.Components
         {
             var worldViewProj = Rotation * Translation * Scaling * proj;
 
-            ConstantStruct struc = new ConstantStruct();
-            struc.texture = texture;
-            struc.ShaderResourceView = textureView;
-
-            //var len = Utilities.SizeOf<ConstantStruct>();
-            //var stream = new DataStream(len, true, true);
-            //stream.Write(struc);
-            //stream.Position = 0;
-
-            //var buf = new Direct3D11.Buffer(device, stream, len, ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            var sampler = new SamplerState(device, samplerStateDescription);
             deviceContext.PixelShader.SetShaderResource(0, textureView);
             deviceContext.PixelShader.SetSampler(0, sampler);
             deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
@@ -109,7 +98,6 @@ namespace SharpDX.Components
 
             deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
             deviceContext.PixelShader.SetConstantBuffer(0, constantBuffer);
-            //deviceContext.PixelShader.Se
 
             deviceContext.InputAssembler.PrimitiveTopology = Direct3D.PrimitiveTopology.TriangleList;
 
@@ -120,15 +108,6 @@ namespace SharpDX.Components
             deviceContext.PixelShader.SetConstantBuffer(0, initialConstantBuffer);
             
         }
-
-      
-
-
     }
-    
-    struct ConstantStruct
-    {
-        public Texture2D texture { get; set; }
-        public ShaderResourceView ShaderResourceView { get; set; }
-    }
+
 }
