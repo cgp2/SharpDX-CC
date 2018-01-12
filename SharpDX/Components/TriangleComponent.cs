@@ -39,9 +39,9 @@ namespace SharpDX.Components
             };
 
             t = new VertexPositionColorTexture[3];
-            t[0] = new VertexPositionColorTexture(new Vector3(-0.5f, 0.5f, 0.0f), Color.Red, textCoords[0]);
-            t[1] = new VertexPositionColorTexture(new Vector3(0.5f, 0.5f, 0.0f), Color.Red, textCoords[1]);
-            t[1] = new VertexPositionColorTexture(new Vector3(0.0f, -0.5f, 0.0f), Color.Red, textCoords[2]);
+            t[0] = new VertexPositionColorTexture(new Vector4(-0.5f, 0.5f, 0.0f, 1.0f), Color.Red, textCoords[0]);
+            t[1] = new VertexPositionColorTexture(new Vector4(0.5f, 0.5f, 0.0f, 1.0f), Color.Red, textCoords[1]);
+            t[2] = new VertexPositionColorTexture(new Vector4(0.0f, -0.5f, 0.0f, 1.0f), Color.Red, textCoords[2]);
 
             WorldPosition = new Vector3(0f, 0f, 0f);
             Translation = Matrix.Translation(new Vector3(0f, 0f, 0f));

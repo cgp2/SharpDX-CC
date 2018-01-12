@@ -31,6 +31,7 @@ namespace SharpDX.Games
         protected DepthStencilView depthView = null;
 
         TriangleComponent trg;
+        CubeComponentTextured cube;
 
         public TexturingGame()
         {
@@ -89,7 +90,11 @@ namespace SharpDX.Games
             trg = new TriangleComponent(device);
             trg.WorldPosition = new Vector3(0, 0f, 0);
             trg.Update();
-            trg.Scaling = Matrix.Scaling(10);      
+            trg.Scaling = Matrix.Scaling(10);
+
+            cube = new CubeComponentTextured(device);
+            cube.WorldPosition = new Vector3(5, 0, 0);
+            cube.Update();
             
             var texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "text.png"));
             ShaderResourceView textureView = new ShaderResourceView(device, texture);
@@ -117,6 +122,7 @@ namespace SharpDX.Games
             var viewProj = Matrix.Multiply(Camera.View, Camera.Proj);
 
             trg.Draw(deviceContext, viewProj, constantBuffer);
+            cube.Draw(deviceContext, viewProj, constantBuffer);
 
             swapChain.Present(1, PresentFlags.None);
         }

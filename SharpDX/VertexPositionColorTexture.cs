@@ -8,11 +8,11 @@ namespace SharpDX
 {
    public struct VertexPositionColorTexture
     {
-        public Vector3 Position;
+        public Vector4 Position;
         public Color4 Color;
         public Vector2 TextureCoordinates;
 
-        public VertexPositionColorTexture(Vector3 position, Color4 color, Vector2 textureCoord)
+        public VertexPositionColorTexture(Vector4 position, Color4 color, Vector2 textureCoord)
         {
             Position = position;
             Color = color;
