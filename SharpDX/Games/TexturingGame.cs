@@ -22,8 +22,8 @@ namespace SharpDX.Games
         private Stopwatch clock = new Stopwatch();
         private Direct3D11.InputElement[] inputElements = new Direct3D11.InputElement[]
         {
-            new Direct3D11.InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0),
-            new Direct3D11.InputElement("COLOR", 0, Format.R32G32B32A32_Float, 16, 0),
+            new InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0),
+            new InputElement("COLOR", 0, Format.R32G32B32A32_Float, 16, 0),
             new InputElement("TEXCOORD", 0, Format.R32G32_Float, 32, 0)
         };
         protected Direct3D11.Buffer constantBuffer;
@@ -32,6 +32,7 @@ namespace SharpDX.Games
 
         TriangleComponent trg;
         CubeComponentTextured cube;
+        GridComponentTextured grid;
 
         public TexturingGame()
         {
@@ -57,7 +58,6 @@ namespace SharpDX.Games
             inputLayout = new InputLayout(device, inputSignature, inputElements);
             deviceContext.InputAssembler.InputLayout = inputLayout;
 
-
             constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
             backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0);
@@ -77,7 +77,7 @@ namespace SharpDX.Games
                 OptionFlags = ResourceOptionFlags.None
             });
 
-
+            
             depthView = new DepthStencilView(device, depthBuffer);
         }
 
@@ -88,27 +88,30 @@ namespace SharpDX.Games
             deviceContext.OutputMerger.SetTargets(depthView, renderTargetView);      
 
             trg = new TriangleComponent(device);
-            trg.WorldPosition = new Vector3(0, 0f, 0);
+            trg.WorldPosition = new Vector3(0, 2f, 0);
             trg.Update();
-            trg.Scaling = Matrix.Scaling(10);
+            trg.RotationCenter = trg.WorldPosition;
+            //trg.Scaling = Matrix.Scaling(10);
 
             cube = new CubeComponentTextured(device);
-            cube.WorldPosition = new Vector3(5, 0, 0);
+            cube.WorldPosition = new Vector3(5f, 5f, 0);
+            cube.RotationCenter = cube.WorldPosition;
             cube.Update();
-            
-            var texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "text.png"));
-            ShaderResourceView textureView = new ShaderResourceView(device, texture);
+
+            grid = new GridComponentTextured(device);
+            grid.WorldPosition = new Vector3(-50f, 0f, -50f);
+            grid.Update();
+
+            clock.Start();
 
             RenderLoop.Run(renderForm, RenderCallback);
         }
 
         private void RenderCallback()
         {
-
             var viewProj = Matrix.Multiply(Camera.View, Camera.Proj);
             var worldViewProj = viewProj;
-            deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
-       
+            deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);       
 
             Draw();
         }
@@ -116,6 +119,12 @@ namespace SharpDX.Games
 
         public void Draw()
         {
+            var time = clock.ElapsedMilliseconds / 1000f;
+
+            //cube.Rotation = Matrix.RotationYawPitchRoll((float)Math.Sin(time), (float)Math.Cos(time / 2), (float)Math.Cos(time / 2));
+
+            trg.Rotation = Matrix.RotationYawPitchRoll((float)Math.Sin(time), 0, 0);
+
             deviceContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0f, 0);
             deviceContext.ClearRenderTargetView(renderTargetView, Color.Black);
 
@@ -123,12 +132,10 @@ namespace SharpDX.Games
 
             trg.Draw(deviceContext, viewProj, constantBuffer);
             cube.Draw(deviceContext, viewProj, constantBuffer);
+            grid.Draw(deviceContext, viewProj, constantBuffer);
 
             swapChain.Present(1, PresentFlags.None);
-        }
-
-
-    
+        } 
 
         public override void KeyPressed(Keys key)
         {

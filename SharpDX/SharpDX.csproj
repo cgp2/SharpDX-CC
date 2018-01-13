@@ -84,7 +84,9 @@
     <Compile Include="Components\CameraComponent.cs" />
     <Compile Include="Components\CircleComponent.cs" />
     <Compile Include="Components\CubeComponentTextured.cs" />
+    <Compile Include="Components\GridComponentTextured.cs" />
     <Compile Include="Games\TexturingGame.cs" />
+    <Compile Include="ObjLoader.cs" />
     <Compile Include="TextureLoader.cs" />
     <Compile Include="Components\CubeComponent.cs" />
     <Compile Include="Components\GridComponent.cs" />
@@ -97,7 +99,7 @@
     <Compile Include="Components\TriangleComponent.cs" />
     <Compile Include="Games\TriangleGame.cs" />
     <Compile Include="vertexPositionColor.cs" />
-    <Compile Include="Game.cs" />
+    <Compile Include="Games\Game.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Games\WhirlingCubeGame.cs" />
@@ -114,6 +116,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="1t.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="3t.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="MiniCircle.fx" />

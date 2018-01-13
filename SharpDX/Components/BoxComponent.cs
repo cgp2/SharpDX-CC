@@ -18,22 +18,27 @@ namespace SharpDX.Components
             this.device = device;
 
             vertices = new Vector4[]
-        {
-            //TOP
-            new Vector4(-1.0f, 4.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
-            new Vector4(1.0f, 4.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
-            //BOTTOM
-            new Vector4(1.0f, 0.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
-            new Vector4(-1.0f, 0.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
-            //LEFT
-            new Vector4(-1.0f, 0f, 0.0f, 1.0f), Color4.White.ToVector4(),
-            new Vector4(-1.0f, 4.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
-            //RIGHT
-            new Vector4(1.0f, 0.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
-            new Vector4(1.0f, 4.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
-        };
+            {
+                    //TOP
+                    new Vector4(-1.0f, 4.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
+                    new Vector4(1.0f, 4.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
+                    //BOTTOM
+                    new Vector4(1.0f, 0.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
+                    new Vector4(-1.0f, 0.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
+                    //LEFT
+                    new Vector4(-1.0f, 0f, 0.0f, 1.0f), Color4.White.ToVector4(),
+                    new Vector4(-1.0f, 4.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
+                    //RIGHT
+                    new Vector4(1.0f, 0.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
+                    new Vector4(1.0f, 4.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
+             };
+
             WorldPosition = new Vector3(0f, 0f, 0f);
+            RotationCenter = WorldPosition;
             Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
+            Translation = new Vector3(0f, 0f, 0f);
+            ScalingCenter = WorldPosition;
+            Scaling = new Vector3(1f, 1f, 1f);
 
             GlobalVertices = vertices;
 
@@ -55,7 +60,7 @@ namespace SharpDX.Components
             return ret;
         }
 
-        public override void Update()
+        public void Update()
         {
             GlobalVertices = Transformation(vertices, WorldPosition, Rotation);
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);

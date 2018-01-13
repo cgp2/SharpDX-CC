@@ -18,11 +18,14 @@ namespace SharpDX.Components
         public BarComponent(Direct3D11.Device device)
         {
             this.device = device;
-            Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
-            Translation = Matrix.Translation(new Vector3(0f, 0f, 0f));
-            Scaling = Matrix.Scaling(1);
-
             WorldPosition = new Vector3(0f, 0f, 0f);
+            RotationCenter = WorldPosition;
+            Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
+            Translation = new Vector3(0f, 0f, 0f);
+            ScalingCenter = WorldPosition;
+            Scaling = new Vector3(1f, 1f, 1f);
+
+            
             vertices = new Vector4[]
             {
                 //TOP
@@ -61,7 +64,8 @@ namespace SharpDX.Components
 
         public override void Draw(DeviceContext deviceContext, Matrix proj, Direct3D11.Buffer initialConstantBuffer)
         {
-            var worldViewProj =  Translation * proj;
+            Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
+            var worldViewProj = transform * proj;
 
             deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
             deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
@@ -73,10 +77,10 @@ namespace SharpDX.Components
             deviceContext.Draw(GlobalVertices.Count(), 0);
 
             deviceContext.VertexShader.SetConstantBuffer(0, initialConstantBuffer);
-            Translation = Matrix.Translation(0, 0, 0);
+            Translation = new Vector3(0f, 0f, 0f);
         }
 
-        public override void Update()
+        public void Update()
         {
             GlobalVertices = Transformation(vertices, WorldPosition, Rotation);
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);

@@ -34,10 +34,13 @@ namespace SharpDX.Components
         public SphereComponent(Direct3D11.Device device, float diametr = 1.0f, int tessellation = 16)
         {
             this.device = device;
+
             WorldPosition = new Vector3(0f, 0f, 0f);
+            RotationCenter = WorldPosition;
             Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
-            Translation = Matrix.Translation(new Vector3(0f, 0f, 0f));
-            Scaling = Matrix.Scaling(1);
+            Translation = new Vector3(0f, 0f, 0f);
+            ScalingCenter = WorldPosition;
+            Scaling = new Vector3(1f, 1f, 1f);
 
             int verticalSegments = tessellation;
             int horizontalSegments = tessellation * 2;
@@ -131,9 +134,10 @@ namespace SharpDX.Components
             //deviceContext.InputAssembler.InputLayout = inputLayout;
 
             var time = clock.ElapsedMilliseconds / 1000f;
-            Translation = Matrix.Translation((float)Math.Cos(time / 2), 0, (float)Math.Sin(time / 2));
+            Translation = new Vector3((float)Math.Cos(time / 2), 0, (float)Math.Sin(time / 2));
 
-            var worldViewProj = Rotation * Translation * Scaling * proj;
+            Matrix transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, Scaling, WorldPosition, Quaternion.RotationMatrix(Rotation), Translation);
+            var worldViewProj = transform * proj;
 
             deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
 
@@ -149,7 +153,7 @@ namespace SharpDX.Components
             deviceContext.VertexShader.SetConstantBuffer(0, initialConstantBuffer);
         }
 
-        public override void Update()
+        public void Update()
         {
             vertices = Transformation(vertices, WorldPosition, Rotation);
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, vertices);
@@ -158,7 +162,7 @@ namespace SharpDX.Components
         public Vector4[] Transformation(Vector4[] vertices, Vector3 translation, Matrix rotation)
         {
             Vector4[] ret = new Vector4[vertices.Length];
-            Matrix transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), new Vector3(0f, 0f, 0f), Quaternion.RotationMatrix(rotation), translation);
+            Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
 
             for (int i = 0; i < vertices.Length; i += 2)
             {

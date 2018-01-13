@@ -23,15 +23,19 @@ namespace SharpDX.Components
 
         public Direct3D11.Buffer indexBuffer;
 
+
         public GridComponent(Direct3D11.Device device)
         {
             this.device = device;
-            WorldPosition = new Vector3(0f, 0f, 0f);
-            Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
-            Scaling = Matrix.Translation(0f, 0f, 0f);
-            Scaling = Matrix.Scaling(1);
 
-            VertexCount = (TerrainWidth - 1) * (TerrainHeight - 1) * 8;
+            WorldPosition = new Vector3(0f, 0f, 0f);
+            RotationCenter = WorldPosition;
+            Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
+            Translation = new Vector3(0f, 0f, 0f);
+            ScalingCenter = WorldPosition;
+            Scaling = new Vector3(1f, 1f, 1f);
+
+            VertexCount = (TerrainWidth) * (TerrainHeight) * 8;
 
             IndexCount = VertexCount;
 
@@ -138,7 +142,7 @@ namespace SharpDX.Components
             return ret;
         }
 
-        public override void Update()
+        public void Update()
         {
             vertices = Transformation(vertices, WorldPosition, Rotation);
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, vertices);

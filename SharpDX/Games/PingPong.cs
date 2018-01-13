@@ -169,7 +169,7 @@ namespace SharpDX.Games
 
             crcl1.WorldPosition += circleMovementDirection * 0.01f;
 
-            crcl1.Translation = Matrix.Translation(crcl1.WorldPosition - new Vector3(0,2,0));
+            crcl1.Translation = crcl1.WorldPosition - new Vector3(0,2,0);
             //crcl1.Translation = Matrix.Translation(crcl1.WorldPosition);         
             crcl1.Draw(deviceContext, viewProj, constantBuffer);
 
@@ -189,13 +189,13 @@ namespace SharpDX.Games
             if (crossingPoint.X >= topBarRight && topBarRight < boxRightBorder)
             {
                 barTop.WorldPosition += new Vector3(0.05f, 0f, 0f);
-                barTop.Translation = Matrix.Translation(barTop.WorldPosition - new Vector3(0f, 3.9f, 0f));
+                barTop.Translation = barTop.WorldPosition - new Vector3(0f, 3.9f, 0f);
             }
 
             else if  (crossingPoint.X <= topBarLeft && topBarLeft > boxLeftBorder)
             {
                 barTop.WorldPosition += new Vector3(-0.05f, 0f, 0f);
-                barTop.Translation = Matrix.Translation(barTop.WorldPosition - new Vector3(0f, 3.9f, 0f));
+                barTop.Translation = barTop.WorldPosition - new Vector3(0f, 3.9f, 0f);
             }
         }
 

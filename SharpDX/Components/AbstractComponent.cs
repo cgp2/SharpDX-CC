@@ -17,13 +17,14 @@ namespace SharpDX.Components
         protected Vector4[] vertices ;
         public Vector4[] GlobalVertices;
         public Vector3 WorldPosition;
-        public Matrix Translation;
+        public Vector3 Translation;
         public Matrix Rotation;
-        public Matrix Scaling;
+        public Vector3 Scaling;
+        public Vector3 ScalingCenter;
+        public Vector3 RotationCenter;
 
 
         public abstract void Draw (Direct3D11.DeviceContext deviceContext, Matrix proj, Direct3D11.Buffer initialConstantBuffer);
-        public abstract void Update();
 
 
     }

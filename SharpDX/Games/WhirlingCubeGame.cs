@@ -29,15 +29,13 @@ namespace SharpDX.Games
         protected Texture2D depthBuffer = null;
         protected DepthStencilView depthView = null;
 
-
         CubeComponent cube1;
         CubeComponent cube2;
         CubeComponent cube3;
         CubeComponent cube4;
         GridComponent grid;
         TriangleComponent trg;
-        SphereComponent sphere;
-        
+        SphereComponent sphere;      
 
         public WhirlingCubeGame()
         {
@@ -91,7 +89,6 @@ namespace SharpDX.Games
 
         public void Run()
         {
-
             deviceContext.Rasterizer.SetViewport(new Viewport(0, 0, renderForm.ClientSize.Width, renderForm.ClientSize.Height, 0.0f, 1.0f));
             deviceContext.OutputMerger.SetTargets(depthView, renderTargetView);
 
@@ -118,7 +115,6 @@ namespace SharpDX.Games
             trg = new TriangleComponent(device);
             trg.WorldPosition = new Vector3(0, 0f, 0);
             trg.Update();
-            trg.Scaling = Matrix.Scaling(4f);
 
             sphere = new SphereComponent(device, 3, 10);
             sphere.WorldPosition = new Vector3(5f, 1f, 0f);

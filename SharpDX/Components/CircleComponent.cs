@@ -26,9 +26,11 @@ namespace SharpDX.Components
         {
             this.device = device;
             WorldPosition = new Vector3(0f, 0f, 0f);
+            RotationCenter = WorldPosition;
             Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
-            Translation = Matrix.Translation(new Vector3(0f, 0f, 0f));
-            Scaling = Matrix.Scaling(1);
+            Translation = new Vector3(0f, 0f, 0f);
+            ScalingCenter = WorldPosition;
+            Scaling = new Vector3(1f, 1f, 1f);
 
             Radius = Diametr / 2;
             indices = new int[vertexCount];
@@ -42,21 +44,7 @@ namespace SharpDX.Components
                 vertices[i] = new Vector4(x, y, 0f, 1.0f);
                 vertices[i + 1] = Color.Blue.ToVector4();
                 indices[s] = s;
-                s++;
-
-                //x += 0.001f;
-                //y += 0.001f;
-                //vertices[i] = new Vector4(x, y, 0f, 1.0f);
-                //vertices[i + 1] = Color.Blue.ToVector4();
-                //indices[s] = s;
-                //s++;
-
-                //x -= 0.002f;
-                //y -= 0.002f;
-                //vertices[i] = new Vector4(x, y, 0f, 1.0f);
-                //vertices[i + 1] = Color.Blue.ToVector4();
-                //indices[s] = s;
-                //s++;
+                s++;           
             }
 
 
@@ -82,7 +70,7 @@ namespace SharpDX.Components
             return ret;
         }
 
-        public override void Update()
+        public void Update()
         {
             GlobalVertices = Transformation(vertices, WorldPosition, Rotation);
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
@@ -90,8 +78,9 @@ namespace SharpDX.Components
 
 
         public override void Draw(DeviceContext deviceContext, Matrix proj, Direct3D11.Buffer initialConstantBuffer)
-        {           
-            var worldViewProj = Translation * proj;
+        {
+            Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
+            var worldViewProj = transform * proj;
 
             deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
             deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
@@ -103,7 +92,7 @@ namespace SharpDX.Components
 
             deviceContext.VertexShader.SetConstantBuffer(0, initialConstantBuffer);
 
-            Translation = Matrix.Translation(0,0,0);
+            Translation = new Vector3(0,0,0);
         }
      
     }

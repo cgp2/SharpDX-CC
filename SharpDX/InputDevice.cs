@@ -65,7 +65,7 @@ namespace SharpDX
 
             }
 
-           //Game.MouseMoved(MousePositionLocal.X, MousePositionLocal.Y);
+           // Game.MouseMoved(MousePositionLocal.X, MousePositionLocal.Y);
         }
 
 
