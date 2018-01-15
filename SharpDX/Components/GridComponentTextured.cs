@@ -34,11 +34,11 @@ namespace SharpDX.Components
         {
             this.device = device;
 
-            WorldPosition = new Vector3(0f, 0f, 0f);
-            RotationCenter = WorldPosition;
+            InitialPosition = new Vector3(0f, 0f, 0f);
+            RotationCenter = InitialPosition;
             Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
             Translation = new Vector3(0f, 0f, 0f);
-            ScalingCenter = WorldPosition;
+            ScalingCenter = InitialPosition;
             Scaling = new Vector3(1f, 1f, 1f);
 
             VertexCount = (TerrainWidth - 1) * (TerrainHeight - 1) * 6;
@@ -151,9 +151,9 @@ namespace SharpDX.Components
             return ret;
         }
 
-        public void Update()
+        public override void Update()
         {
-            t = Transformation(t, WorldPosition, Rotation);
+            t = Transformation(t, InitialPosition, Rotation);
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
         }
 

@@ -18,11 +18,11 @@ namespace SharpDX.Components
         public BarComponent(Direct3D11.Device device)
         {
             this.device = device;
-            WorldPosition = new Vector3(0f, 0f, 0f);
-            RotationCenter = WorldPosition;
+            InitialPosition = new Vector3(0f, 0f, 0f);
+            RotationCenter = InitialPosition;
             Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
             Translation = new Vector3(0f, 0f, 0f);
-            ScalingCenter = WorldPosition;
+            ScalingCenter = InitialPosition;
             Scaling = new Vector3(1f, 1f, 1f);
 
             
@@ -80,9 +80,9 @@ namespace SharpDX.Components
             Translation = new Vector3(0f, 0f, 0f);
         }
 
-        public void Update()
+        public override void Update()
         {
-            GlobalVertices = Transformation(vertices, WorldPosition, Rotation);
+            GlobalVertices = Transformation(vertices, InitialPosition, Rotation);
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
         }
     }

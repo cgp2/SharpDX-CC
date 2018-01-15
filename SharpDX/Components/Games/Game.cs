@@ -11,10 +11,13 @@ using SharpDX.Direct3D;
 using SharpDX.D3DCompiler;
 using System.Diagnostics;
 using System.IO;
+using SharpDX.RawInput;
+using SharpDX.Multimedia;
+using System.Windows.Forms;
 
-namespace PingPong
+namespace SharpDX
 {
-    public class Game : IDisposable
+    public abstract class Game 
     {
         public Direct3D11.Device device;
         public RenderForm renderForm;
@@ -43,21 +46,16 @@ namespace PingPong
             new Direct3D11.InputElement("COLOR", 0, Format.R32G32B32A32_Float, 12, 0, InputClassification.PerVertexData, 0)
         };
 
-
-
-
         public bool IsActive { get { return true; } }
-
 
         public Game()
         {
-            renderForm = new RenderForm();
+            renderForm = new RenderForm("Default3D");
             renderForm.ClientSize = new Size(width, height);
             renderForm.AllowUserResizing = false;
-
             InitializeDeviceResources();
 
-            Camera = new CameraComponent((float)renderForm.Width / renderForm.Height, new Vector3(0, 5, -20), new Vector3(0, 0, 0));
+            Camera = new CameraComponent((float)renderForm.Width / renderForm.Height, new Vector3(0, 6, -3), new Vector3(0, 3, 0));
 
             inp = new InputDevice(this);
         }
@@ -115,13 +113,13 @@ namespace PingPong
 
         protected void InitializeShaders()
         { 
-            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile("vrtShader.hlsl", "main", "vs_4_0", ShaderFlags.Debug))
+            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile("MiniCube.fx", "VS", "vs_4_0", ShaderFlags.Debug))
             {
                 inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
                 vertexShader = new Direct3D11.VertexShader(device, vertexShaderByteCode);
             }
 
-            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile("pxlShader.hlsl", "main", "ps_4_0", ShaderFlags.Debug))
+            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile("MiniCube.fx", "PS", "ps_4_0", ShaderFlags.Debug))
             {
                 pixelShader = new Direct3D11.PixelShader(device, pixelShaderByteCode);
             }
@@ -129,22 +127,21 @@ namespace PingPong
             deviceContext.VertexShader.Set(vertexShader);
             deviceContext.PixelShader.Set(pixelShader);
 
-
-
             inputLayout = new InputLayout(device, inputSignature, inputElements);
             deviceContext.InputAssembler.InputLayout = inputLayout;
-
         }
 
+        public abstract void KeyPressed(Keys key);
 
-        public void Dispose()
+        public abstract void MouseMoved(float x, float y);
+
+        public void DisposeBase()
         {
             renderForm.Dispose();
             renderTargetView.Dispose();
             device.Dispose();
             swapChain.Dispose();
             deviceContext.Dispose();
-            vertexBuffer.Dispose();
             vertexShader.Dispose();
             pixelShader.Dispose();
             inputLayout.Dispose();

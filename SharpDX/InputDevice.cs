@@ -59,13 +59,12 @@ namespace SharpDX
             MousePositionLocal	= new Vector2(p.X, p.Y);
 			MouseOffset			= new Vector2(e.X, e.Y);
 
-
             if (MouseMove != null) {
 				MouseMove(new MouseMoveEventArgs() { Position = MousePositionLocal, Offset = MouseOffset});
 
             }
 
-           // Game.MouseMoved(MousePositionLocal.X, MousePositionLocal.Y);
+            //Game.MouseMoved(MousePositionLocal.X, MousePositionLocal.Y);
         }
 
 
@@ -114,6 +113,10 @@ namespace SharpDX
 			}
 		}
 
+        public void SetMouseToCenter()
+        {
+            Cursor.Position = new System.Drawing.Point(Game.renderForm.Width / 2, Game.renderForm.Height / 2);
+        }
 
 		public bool IsKeyDown(Keys key, bool ignoreInputMode = true)
 		{

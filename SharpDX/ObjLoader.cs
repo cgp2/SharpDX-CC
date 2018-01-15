@@ -13,11 +13,11 @@ namespace SharpDX
 {
     public class ObjLoader
     {
-        public void LoadObjModel(SharpDX.Direct3D11.Device device, string fileName, out Buffer vertexBuffer, out int verticesCount)
+        public void LoadObjModel(SharpDX.Direct3D11.Device device, string fileName, out Buffer vertexBuffer, out int verticesCount, out VertexPositionNormalTexture[] vertices)
         {
             vertexBuffer = null;
             verticesCount = 0;
-
+            
             if (!File.Exists(fileName))
             {
                 throw new FileNotFoundException();
@@ -25,9 +25,9 @@ namespace SharpDX
 
             var positions = new List<Vector4>();
             var normals = new List<Vector4>();
-            var texCoords = new List<Vector4>();
+            var texCoords = new List<Vector2>();
 
-            var vertices = new List<VertexStructures.VertexPositionNormalTex>();
+            var vertList = new List<VertexPositionNormalTexture>();
 
             var lines = File.ReadAllLines(fileName);
             for (int i = 0; i < lines.Length; i++)
@@ -76,9 +76,9 @@ namespace SharpDX
                             var v1 = GenerateVertex(vals[fInd], positions, texCoords, normals);
                             var v2 = GenerateVertex(vals[fInd + 1], positions, texCoords, normals);
 
-                            vertices.Add(v0);
-                            vertices.Add(v1);
-                            vertices.Add(v2);
+                            vertList.Add(v0);
+                            vertList.Add(v1);
+                            vertList.Add(v2);
                         }
 
                         break;
@@ -87,27 +87,21 @@ namespace SharpDX
                 }
             }
 
-            if (vertices.Count == 0) return;
-            verticesCount = vertices.Count;
-            vertexBuffer = Buffer.Create(device, VertexStructures.ToArray(vertices), new BufferDescription
-            {
-                BindFlags = BindFlags.VertexBuffer,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-                Usage = ResourceUsage.Default,
-            });
+            vertices = vertList.ToArray();
+            if (vertList.Count == 0) return;
+            verticesCount = vertList.Count;
+            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, vertList.ToArray());
         }
 
-
-        VertexStructures.VertexPositionNormalTex GenerateVertex(string elem, List<Vector4> positions, List<Vector4> texCoords, List<Vector4> normals)
+        VertexPositionNormalTexture GenerateVertex(string elem, List<Vector4> positions, List<Vector2> texCoords, List<Vector4> normals)
         {
             int p, t, n;
             ParseFaceElement(elem, out p, out t, out n);
-            var v = new VertexStructures.VertexPositionNormalTex
+            var v = new VertexPositionNormalTexture
             {
                 Position = positions[p],
                 Normal = n == -1 ? Vector4.Zero : normals[n],
-                Tex = t == -1 ? Vector4.Zero : texCoords[t]
+                Texture = t == -1 ? Vector2.Zero : texCoords[t]
             };
 
             return v;
@@ -171,35 +165,12 @@ namespace SharpDX
             return normal;
         }
 
-        Vector4 ParseTex(string[] values)
+        Vector2 ParseTex(string[] values)
         {
             var u = float.Parse(values[1], CultureInfo.InvariantCulture);
             var v = 1f - float.Parse(values[2], CultureInfo.InvariantCulture);
 
-            return new Vector4(u, v, 0, 0);
-        }
-    }
-
-    public static class VertexStructures
-    {
-        public struct VertexPositionNormalTex
-        {
-            public Vector4 Position;
-            public Vector4 Normal;
-            public Vector4 Tex;
-        }
-
-        public static Vector4[] ToArray(List<VertexPositionNormalTex> list)
-        {
-            Vector4[] array = new Vector4[list.Count * 2];
-
-            for (int i = 0; i < list.Count; i++)
-            {
-                array[i * 2] = list[i].Position;
-                array[i * 2 + 1] = list[i].Tex;
-            }
-
-            return array;
+            return new Vector2(u, v);
         }
     }
 }

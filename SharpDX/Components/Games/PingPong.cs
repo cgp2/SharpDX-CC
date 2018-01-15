@@ -113,16 +113,16 @@ namespace SharpDX.Games
             boxRightBorder = box.GlobalVertices[12].X - 0.01f;
 
             barBottom = new BarComponent(device);
-            barBottom.WorldPosition = new Vector3(0f, 0.1f, 0f);
+            barBottom.InitialPosition = new Vector3(0f, 0.1f, 0f);
             barBottom.Update();
 
             barTop = new BarComponent(device);
             barTop.Rotation = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(0), MathUtil.DegreesToRadians(0), MathUtil.DegreesToRadians(180));
-            barTop.WorldPosition = new Vector3(0f, 3.9f, 0f);
+            barTop.InitialPosition = new Vector3(0f, 3.9f, 0f);
             barTop.Update();
 
             crcl1 = new CircleComponent(device);
-            crcl1.WorldPosition = new Vector3(0f, 2f, 0f);
+            crcl1.InitialPosition = new Vector3(0f, 2f, 0f);
             //crcl1.Translation = Matrix.Translation(crcl1.WorldPosition);
             crcl1.Update();
 
@@ -167,9 +167,9 @@ namespace SharpDX.Games
             CheckCircleOverlap();
             ChechDirection();
 
-            crcl1.WorldPosition += circleMovementDirection * 0.01f;
+            crcl1.InitialPosition += circleMovementDirection * 0.01f;
 
-            crcl1.Translation = crcl1.WorldPosition - new Vector3(0,2,0);
+            crcl1.Translation = crcl1.InitialPosition - new Vector3(0,2,0);
             //crcl1.Translation = Matrix.Translation(crcl1.WorldPosition);         
             crcl1.Draw(deviceContext, viewProj, constantBuffer);
 
@@ -178,35 +178,35 @@ namespace SharpDX.Games
 
         private void ChechDirection()
         {
-            float mult = 0.5f * (barTop.GlobalVertices[0].Y - crcl1.WorldPosition.Y);
+            float mult = 0.5f * (barTop.GlobalVertices[0].Y - crcl1.InitialPosition.Y);
 
             var crossingPoint = Vector3.Multiply(circleMovementDirection, mult);
 
             float topBarBottom = barTop.GlobalVertices[0].Y;
-            float topBarLeft = barTop.WorldPosition.X - 0.2f; 
-            float topBarRight = barTop.WorldPosition.X + 0.2f;
+            float topBarLeft = barTop.InitialPosition.X - 0.2f; 
+            float topBarRight = barTop.InitialPosition.X + 0.2f;
 
             if (crossingPoint.X >= topBarRight && topBarRight < boxRightBorder)
             {
-                barTop.WorldPosition += new Vector3(0.05f, 0f, 0f);
-                barTop.Translation = barTop.WorldPosition - new Vector3(0f, 3.9f, 0f);
+                barTop.InitialPosition += new Vector3(0.05f, 0f, 0f);
+                barTop.Translation = barTop.InitialPosition - new Vector3(0f, 3.9f, 0f);
             }
 
             else if  (crossingPoint.X <= topBarLeft && topBarLeft > boxLeftBorder)
             {
-                barTop.WorldPosition += new Vector3(-0.05f, 0f, 0f);
-                barTop.Translation = barTop.WorldPosition - new Vector3(0f, 3.9f, 0f);
+                barTop.InitialPosition += new Vector3(-0.05f, 0f, 0f);
+                barTop.Translation = barTop.InitialPosition - new Vector3(0f, 3.9f, 0f);
             }
         }
 
         private void CheckCircleOverlap()
         {
             //Box overlapping
-            if (crcl1.WorldPosition.Y + crcl1.Radius >= boxUpBorder)
+            if (crcl1.InitialPosition.Y + crcl1.Radius >= boxUpBorder)
             {
                 isGoalHit = true;
 
-                crcl1.WorldPosition = new Vector3(0f, 2f, 0f);
+                crcl1.InitialPosition = new Vector3(0f, 2f, 0f);
                 crcl1.Update();
 
                 Random rd = new Random();
@@ -214,16 +214,16 @@ namespace SharpDX.Games
                 var y = rd.NextFloat(0.4f, 5f);
                 circleMovementDirection = new Vector3(x, y, 0f);
 
-                barTop.WorldPosition = new Vector3(0f, 3.9f, 0f);
+                barTop.InitialPosition = new Vector3(0f, 3.9f, 0f);
                 barTop.Update();
-                barBottom.WorldPosition = new Vector3(0f, 0.1f, 0f);
+                barBottom.InitialPosition = new Vector3(0f, 0.1f, 0f);
                 barBottom.Update();
             }
-            else if (crcl1.WorldPosition.Y - crcl1.Radius <= boxBottomBorder)
+            else if (crcl1.InitialPosition.Y - crcl1.Radius <= boxBottomBorder)
             {
                 isGoalHit = true;
 
-                crcl1.WorldPosition = new Vector3(0f, 2f, 0f);
+                crcl1.InitialPosition = new Vector3(0f, 2f, 0f);
                 crcl1.Update();
 
                 Random rd = new Random();
@@ -231,18 +231,18 @@ namespace SharpDX.Games
                 var y = rd.NextFloat(0.4f, 5f);
                 circleMovementDirection = new Vector3(x, y, 0f);
 
-                barTop.WorldPosition = new Vector3(0f, 3.9f, 0f);
+                barTop.InitialPosition = new Vector3(0f, 3.9f, 0f);
                 barTop.Update();
-                barBottom.WorldPosition = new Vector3(0f, 0.1f, 0f);
+                barBottom.InitialPosition = new Vector3(0f, 0.1f, 0f);
                 barBottom.Update();
 
             }
-            else if (crcl1.WorldPosition.X + crcl1.Radius >= boxRightBorder)
+            else if (crcl1.InitialPosition.X + crcl1.Radius >= boxRightBorder)
             {
                 circleMovementDirection = Vector3.Reflect(circleMovementDirection, Vector3.Left);
                 circleMovementDirection = Vector3.Multiply(circleMovementDirection, 1.02f);
             }
-            else if (crcl1.WorldPosition.X - crcl1.Radius <= boxLeftBorder)
+            else if (crcl1.InitialPosition.X - crcl1.Radius <= boxLeftBorder)
             {
                 circleMovementDirection = Vector3.Reflect(circleMovementDirection, Vector3.Right);
                 circleMovementDirection = Vector3.Multiply(circleMovementDirection, 1.02f);
@@ -250,21 +250,21 @@ namespace SharpDX.Games
 
             //Bars overlap
             float bottomBarTop = barBottom.GlobalVertices[0].Y + 0.02f;
-            float bottomBarLeft = barBottom.WorldPosition.X - 0.2f;
-            float bottomBarRight = barBottom.WorldPosition.X + 0.2f;
+            float bottomBarLeft = barBottom.InitialPosition.X - 0.2f;
+            float bottomBarRight = barBottom.InitialPosition.X + 0.2f;
 
             float topBarBottom = barTop.GlobalVertices[0].Y + 0.02f;
-            float topBarLeft = barTop.WorldPosition.X + 0.2f;
-            float topBarRight = barTop.WorldPosition.X - 0.2f;
+            float topBarLeft = barTop.InitialPosition.X + 0.2f;
+            float topBarRight = barTop.InitialPosition.X - 0.2f;
 
-            if ((crcl1.WorldPosition.Y - crcl1.Radius <= bottomBarTop && (crcl1.WorldPosition.X - crcl1.Radius <= bottomBarRight) &&
-                 crcl1.WorldPosition.X + crcl1.Radius >= bottomBarLeft))
+            if ((crcl1.InitialPosition.Y - crcl1.Radius <= bottomBarTop && (crcl1.InitialPosition.X - crcl1.Radius <= bottomBarRight) &&
+                 crcl1.InitialPosition.X + crcl1.Radius >= bottomBarLeft))
             {
                 circleMovementDirection = Vector3.Reflect(circleMovementDirection, Vector3.Up);
                 circleMovementDirection = Vector3.Multiply(circleMovementDirection, 1.05f);
             }
-            else if ((crcl1.WorldPosition.Y + crcl1.Radius >= topBarBottom && (crcl1.WorldPosition.X - crcl1.Radius <= topBarLeft) &&
-                 crcl1.WorldPosition.X + crcl1.Radius >= topBarRight))
+            else if ((crcl1.InitialPosition.Y + crcl1.Radius >= topBarBottom && (crcl1.InitialPosition.X - crcl1.Radius <= topBarLeft) &&
+                 crcl1.InitialPosition.X + crcl1.Radius >= topBarRight))
             {
                 circleMovementDirection = Vector3.Reflect(circleMovementDirection, Vector3.Up);
                 circleMovementDirection = Vector3.Multiply(circleMovementDirection, 1.05f);
@@ -279,7 +279,7 @@ namespace SharpDX.Games
                     if (barBottom.GlobalVertices[8].X - 0.03 >= boxLeftBorder)
                     {
                         //barBottom.Translation += Matrix.Translation(-0.06f, 0f, 0f);
-                        barBottom.WorldPosition += new Vector3(-0.06f, 0f, 0f);
+                        barBottom.InitialPosition += new Vector3(-0.06f, 0f, 0f);
                         barBottom.Update();
                     }
                     break;
@@ -287,7 +287,7 @@ namespace SharpDX.Games
                     if (barBottom.GlobalVertices[12].X + 0.03 <= boxRightBorder)
                     {
                         //barBottom.Translation += Matrix.Translation(0.06f, 0f, 0f);
-                        barBottom.WorldPosition += new Vector3(0.06f, 0f, 0f);
+                        barBottom.InitialPosition += new Vector3(0.06f, 0f, 0f);
                         barBottom.Update();
                     }
                     break;

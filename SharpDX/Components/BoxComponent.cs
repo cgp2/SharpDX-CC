@@ -33,11 +33,11 @@ namespace SharpDX.Components
                     new Vector4(1.0f, 4.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
              };
 
-            WorldPosition = new Vector3(0f, 0f, 0f);
-            RotationCenter = WorldPosition;
+            InitialPosition = new Vector3(0f, 0f, 0f);
+            RotationCenter = InitialPosition;
             Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
             Translation = new Vector3(0f, 0f, 0f);
-            ScalingCenter = WorldPosition;
+            ScalingCenter = InitialPosition;
             Scaling = new Vector3(1f, 1f, 1f);
 
             GlobalVertices = vertices;
@@ -60,9 +60,9 @@ namespace SharpDX.Components
             return ret;
         }
 
-        public void Update()
+        public override void Update()
         {
-            GlobalVertices = Transformation(vertices, WorldPosition, Rotation);
+            GlobalVertices = Transformation(vertices, InitialPosition, Rotation);
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
         }
 

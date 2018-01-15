@@ -15,13 +15,12 @@ namespace SharpDX.Components
     class CubeComponentTextured : AbstractComponent
     {
         Vector2[] textCoords;
-        VertexPositionColorTexture[] t;
         Texture2D texture;
         ShaderResourceView textureView;
         SamplerStateDescription samplerStateDescription;
         SamplerState sampler;
 
-        public CubeComponentTextured(Direct3D11.Device device)
+        public CubeComponentTextured(Direct3D11.Device device, string path)
         {
             this.device = device;
 
@@ -105,11 +104,13 @@ namespace SharpDX.Components
                 new Vector2(0.75f, 0.33f),
             };
 
-            t = new VertexPositionColorTexture[textCoords.Count()];
+            t = new VertexPositionNormalTexture[textCoords.Count()];
             for(int i =0; i < vertices.Count(); i+=2)
-                t[i/2] = new VertexPositionColorTexture(vertices[i], Color.Blue.ToColor4(), textCoords[i / 2]);
+                t[i/2] = new VertexPositionNormalTexture(vertices[i], Color.Blue.ToColor4(), textCoords[i / 2]);
 
-            texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "3t.png"));
+            initialVertices = t;
+
+            texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), path));
             textureView = new ShaderResourceView(device, texture);
             samplerStateDescription = new SamplerStateDescription
             {
@@ -120,11 +121,11 @@ namespace SharpDX.Components
             };
             sampler = new SamplerState(device, samplerStateDescription);
 
-            WorldPosition = new Vector3(0f, 0f, 0f);
-            RotationCenter = WorldPosition;
+            InitialPosition = new Vector3(0f, 0f, 0f);
+            RotationCenter = InitialPosition;
             Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
             Translation = new Vector3(0f, 0f, 0f);
-            ScalingCenter = WorldPosition;
+            ScalingCenter = InitialPosition;
             Scaling = new Vector3(1f, 1f, 1f);
 
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
@@ -132,24 +133,25 @@ namespace SharpDX.Components
         }
 
 
-        public VertexPositionColorTexture[] Transformation(VertexPositionColorTexture[] vertices, Vector3 translation, Matrix rotation)
+        public VertexPositionNormalTexture[] Transformation(VertexPositionNormalTexture[] vertices, Vector3 translation, Matrix rotation)
         {
-            var ret = new VertexPositionColorTexture[vertices.Length];
-            Matrix transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, 1.0f, 1.0f), Quaternion.RotationMatrix(rotation), translation);
+            var ret = new VertexPositionNormalTexture[vertices.Length];
+            transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, 1.0f, 1.0f), Quaternion.RotationMatrix(rotation), translation);
 
             for (int i = 0; i < vertices.Length; i++)
             {
                 ret[i].Position = Vector4.Transform(vertices[i].Position, transform);
-                ret[i].Color = vertices[i].Color;
-                ret[i].TextureCoordinates = vertices[i].TextureCoordinates;
+                ret[i].Normal = vertices[i].Normal;
+                ret[i].Texture = vertices[i].Texture;
             }
 
             return ret;
         }
 
-        public void Update()
+        public override void Update()
         {
-            t = Transformation(t, WorldPosition, Rotation);
+            initialVertices = t;
+            t = Transformation(t, InitialPosition, Rotation);
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
         }
 
@@ -157,6 +159,7 @@ namespace SharpDX.Components
         public override void Draw(DeviceContext deviceContext, Matrix proj, Direct3D11.Buffer initialConstantBuffer)
         {
             Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
+            WorldPosition = Vector3.Transform(InitialPosition, transform);
             var worldViewProj = transform * proj;
             // Scaling = Matrix.Scaling((float)Math.Sin(time));
 

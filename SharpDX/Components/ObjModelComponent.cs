@@ -8,39 +8,22 @@ using SharpDX.Direct3D11;
 using SharpDX.Direct3D;
 using SharpDX.D3DCompiler;
 using System.Diagnostics;
+using System.IO;
+
 
 namespace SharpDX.Components
 {
-    class TriangleComponent : AbstractComponent
+    class ObjModelComponent : AbstractComponent
     {
         Vector2[] textCoords;
         Texture2D texture;
         ShaderResourceView textureView;
         SamplerStateDescription samplerStateDescription;
         SamplerState sampler;
-
-        public TriangleComponent(Direct3D11.Device device)
+        int verticesCount;
+        public ObjModelComponent(Direct3D11.Device device, string objFilePath, string texturePath)
         {
             this.device = device;
-
-            vertices = new Vector4[]
-            {
-                new Vector4(-0.5f, 0.5f, 0.0f, 1.0f), Color.Red.ToVector4(),
-                new Vector4(0.5f, 0.5f, 0.0f, 1.0f), Color.Blue.ToVector4(),
-                new Vector4(0.0f, -0.5f, 0.0f, 1.0f), Color.Green.ToVector4(),
-            };
-
-            textCoords = new Vector2[]
-            {
-                new Vector2(0.5f, 0.1f),
-                new Vector2(1.0f, 0.8f),
-                new Vector2(0.0f, 0.8f),
-            };
-
-            t = new VertexPositionNormalTexture[3];
-            t[0] = new VertexPositionNormalTexture(new Vector4(-0.5f, 0.5f, 0.0f, 1.0f), Color.Red.ToVector4(), textCoords[0]);
-            t[1] = new VertexPositionNormalTexture(new Vector4(0.5f, 0.5f, 0.0f, 1.0f), Color.Red.ToVector4(), textCoords[1]);
-            t[2] = new VertexPositionNormalTexture(new Vector4(0.0f, -0.5f, 0.0f, 1.0f), Color.Red.ToVector4(), textCoords[2]);
 
             InitialPosition = new Vector3(0f, 0f, 0f);
             RotationCenter = InitialPosition;
@@ -49,26 +32,35 @@ namespace SharpDX.Components
             ScalingCenter = InitialPosition;
             Scaling = new Vector3(1f, 1f, 1f);
 
-            texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "3t.png"));
+            verticesCount = 1;
+            t = new VertexPositionNormalTexture[verticesCount];
+            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
+            ObjLoader objLoader = new ObjLoader();
+            objLoader.LoadObjModel(device, objFilePath, out vertexBuffer, out verticesCount, out t);
+
+            initialVertices = t;
+
+            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
+
+            texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), texturePath));
             textureView = new ShaderResourceView(device, texture);
             samplerStateDescription = new SamplerStateDescription
             {
                 AddressU = TextureAddressMode.Wrap,
                 AddressV = TextureAddressMode.Wrap,
                 AddressW = TextureAddressMode.Wrap,
-                Filter = Filter.MinMagPointMipLinear
+                Filter = Filter.MinMagMipLinear,
             };
             sampler = new SamplerState(device, samplerStateDescription);
-
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
-            constantBuffer = new Direct3D11.Buffer(device, SharpDX.Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, Direct3D11.BindFlags.ConstantBuffer, Direct3D11.CpuAccessFlags.None, Direct3D11.ResourceOptionFlags.None, 0);
+      
+            constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);            
         }
 
         public VertexPositionNormalTexture[] Transformation(VertexPositionNormalTexture[] vertices, Vector3 translation, Matrix rotation)
         {
             var ret = new VertexPositionNormalTexture[vertices.Length];
-            Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(rotation), translation);
-
+            transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, 1.0f, 1.0f), Quaternion.RotationMatrix(rotation), translation);
+            WorldPosition = Vector3.Transform(InitialPosition, transform);
             for (int i = 0; i < vertices.Length; i++)
             {
                 ret[i].Position = Vector4.Transform(vertices[i].Position, transform);
@@ -81,6 +73,7 @@ namespace SharpDX.Components
 
         public override void Update()
         {
+            initialVertices = t;
             t = Transformation(t, InitialPosition, Rotation);
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
         }
@@ -91,6 +84,7 @@ namespace SharpDX.Components
             transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
             WorldPosition = Vector3.Transform(InitialPosition, transform);
             var worldViewProj = transform * proj;
+            // Scaling = Matrix.Scaling((float)Math.Sin(time));
 
             deviceContext.PixelShader.SetShaderResource(0, textureView);
             deviceContext.PixelShader.SetSampler(0, sampler);
@@ -102,15 +96,14 @@ namespace SharpDX.Components
             deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
             deviceContext.PixelShader.SetConstantBuffer(0, constantBuffer);
 
-            deviceContext.InputAssembler.PrimitiveTopology = Direct3D.PrimitiveTopology.TriangleList;
+            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
 
-            deviceContext.InputAssembler.SetVertexBuffers(0, new Direct3D11.VertexBufferBinding(vertexBuffer, SharpDX.Utilities.SizeOf<VertexPositionColorTexture>(), 0));
-            deviceContext.Draw(vertices.Count(), 0);
+            deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+            deviceContext.Draw(verticesCount, 0);
 
             deviceContext.VertexShader.SetConstantBuffer(0, initialConstantBuffer);
             deviceContext.PixelShader.SetConstantBuffer(0, initialConstantBuffer);
-            
+
         }
     }
-
 }
