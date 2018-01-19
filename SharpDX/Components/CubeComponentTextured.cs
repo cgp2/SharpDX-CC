@@ -132,7 +132,6 @@ namespace SharpDX.Components
             constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);            
         }
 
-
         public VertexPositionNormalTexture[] Transformation(VertexPositionNormalTexture[] vertices, Vector3 translation, Matrix rotation)
         {
             var ret = new VertexPositionNormalTexture[vertices.Length];
@@ -155,12 +154,11 @@ namespace SharpDX.Components
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
         }
 
-
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
         {
             Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
             WorldPosition = Vector3.Transform(InitialPosition, transform);
-            var worldViewProj = transform * proj;
+            var worldViewProj = transform * view * proj;
             // Scaling = Matrix.Scaling((float)Math.Sin(time));
 
             deviceContext.PixelShader.SetShaderResource(0, textureView);
@@ -181,6 +179,15 @@ namespace SharpDX.Components
             deviceContext.VertexShader.SetConstantBuffer(0, initialConstantBuffer);
             deviceContext.PixelShader.SetConstantBuffer(0, initialConstantBuffer);
 
+        }
+
+        public override void Dispose()
+        {
+            vertexBuffer.Dispose();
+            sampler.Dispose();
+            texture.Dispose();
+            textureView.Dispose();
+            constantBuffer.Dispose();
         }
     }
 }

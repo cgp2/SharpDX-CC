@@ -125,7 +125,6 @@ namespace SharpDX.Components
 
             indexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, indices);
 
-
         }
 
         public Vector4[] Transformation(Vector4[] vertices, Vector3 translation, Matrix rotation)
@@ -149,9 +148,9 @@ namespace SharpDX.Components
         }
 
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
         {
-            var worldViewProj = proj;
+            var worldViewProj = view * proj;
 
             deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
 
@@ -164,6 +163,10 @@ namespace SharpDX.Components
             deviceContext.Draw(VertexCount, 0);
         }
 
-      
+        public override void Dispose()
+        {
+            vertexBuffer.Dispose();
+            constantBuffer.Dispose();
+        }
     }
 }

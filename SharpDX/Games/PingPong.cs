@@ -160,9 +160,9 @@ namespace SharpDX.Games
             deviceContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0f, 0);
             deviceContext.ClearRenderTargetView(renderTargetView, Color.Black);
 
-            box.Draw(deviceContext, Camera.Proj, constantBuffer);
-            barBottom.Draw(deviceContext, viewProj, constantBuffer);
-            barTop.Draw(deviceContext, viewProj, constantBuffer);
+            box.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            barBottom.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            barTop.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
 
             CheckCircleOverlap();
             ChechDirection();
@@ -171,7 +171,7 @@ namespace SharpDX.Games
 
             crcl1.Translation = crcl1.InitialPosition - new Vector3(0,2,0);
             //crcl1.Translation = Matrix.Translation(crcl1.WorldPosition);         
-            crcl1.Draw(deviceContext, viewProj, constantBuffer);
+            crcl1.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
 
             swapChain.Present(1, PresentFlags.None);
         }

@@ -44,13 +44,16 @@ namespace SharpDX
 		private void Device_KeyboardInput(object sender, KeyboardInputEventArgs e)
 		{
 			Break = e.ScanCodeFlags.HasFlag(ScanCodeFlags.Break);
-          
-			if (Break) {
-				if (PressedKeys.Contains(e.Key)) RemovePressedKey(e.Key);
-			} else {
-				if (!PressedKeys.Contains(e.Key)) AddPressedKey(e.Key);
-			}
-		}
+
+            if (Break)
+            {
+                if (PressedKeys.Contains(e.Key)) RemovePressedKey(e.Key);
+            }
+            else
+            {
+                if (!PressedKeys.Contains(e.Key)) AddPressedKey(e.Key);
+            }
+        }
 
 		private void Device_MouseInput(object sender, MouseInputEventArgs e)
 		{
@@ -64,7 +67,7 @@ namespace SharpDX
 
             }
 
-            //Game.MouseMoved(MousePositionLocal.X, MousePositionLocal.Y);
+            Game.MouseMoved(MouseOffset.X, MouseOffset.Y);
         }
 
 
@@ -80,12 +83,12 @@ namespace SharpDX
 
             Game.KeyPressed(key);
             
-            while(Break)
-            {
-                //System.Threading.Thread.Sleep(TimeSpan.Zero);
-                RemovePressedKey(key);
-                AddPressedKey(key);
-            }
+            //while(Break)
+            //{
+            //    //System.Threading.Thread.Sleep(TimeSpan.Zero);
+            //    //RemovePressedKey(key);
+            //    AddPressedKey(key);
+            //}
 			//PressedKeys.Add(key);
    //         if (!PressedKeys.Contains(key))
    //         {

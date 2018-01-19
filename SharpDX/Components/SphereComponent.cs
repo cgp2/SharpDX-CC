@@ -118,15 +118,13 @@ namespace SharpDX.Components
             clock.Start();
         }
 
-     
-
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
         { 
             var time = clock.ElapsedMilliseconds / 1000f;
 
             transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
             WorldPosition = Vector3.Transform(InitialPosition, transform);
-            var worldViewProj = transform * proj;
+            var worldViewProj = transform * view * proj;
 
             deviceContext.PixelShader.SetShaderResource(0, textureView);
             deviceContext.PixelShader.SetSampler(0, sampler);
@@ -167,6 +165,13 @@ namespace SharpDX.Components
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
         }
 
-
+        public override void Dispose()
+        {
+            vertexBuffer.Dispose();
+            sampler.Dispose();
+            texture.Dispose();
+            textureView.Dispose();
+            constantBuffer.Dispose();
+        }
     }
 }

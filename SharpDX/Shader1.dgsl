@@ -278,7 +278,7 @@
     <Node Category="Trait" Data="1.000000" DataType="Float" Id="Microsoft.VisualStudio.DSD.PointColor[33].a" Label="a" LabelResId="3214" PortType="Output" />
     <Node Category="Element" Group="Expanded" Id="Microsoft.VisualStudio.DSD.Add[34]" Label="Add" LabelResId="3447" TypeId="Microsoft.VisualStudio.DSD.Add" />
     <Node Category="Trait" Data="False" DataType="Bool" Id="Microsoft.VisualStudio.DSD.Add[34].PropertyWindowShowElementName" Label="PropertyWindowShowElementName" LabelResId="PropertyWindowShowElementName" />
-    <Node Category="Trait" Data="3.562875 0.000008 1.568406" DataType="Float3" Id="Microsoft.VisualStudio.DSD.Add[34].Position" Label="Position" LabelResId="Position" />
+    <Node Category="Trait" Data="1.932292 0.000010 1.403311" DataType="Float3" Id="Microsoft.VisualStudio.DSD.Add[34].Position" Label="Position" LabelResId="Position" />
     <Node Category="Trait" Data="0.000000 0.000000 0.000000 0.000000" DataType="Float4" Id="Microsoft.VisualStudio.DSD.Add[34].x" Label="x" LabelResId="3102" PortType="Input" />
     <Node Category="Trait" Data="0.000000 0.000000 0.000000 0.000000" DataType="Float4" Id="Microsoft.VisualStudio.DSD.Add[34].y" Label="y" LabelResId="3103" PortType="Input" />
     <Node Category="Trait" Data="0.000000 0.000000 0.000000 0.000000" DataType="Float4" Id="Microsoft.VisualStudio.DSD.Add[34].x + y" Label="x + y" LabelResId="3227" PortType="Output" />

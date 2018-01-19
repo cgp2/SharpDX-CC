@@ -83,10 +83,17 @@
     <Compile Include="Components\BoxComponent.cs" />
     <Compile Include="Components\CameraComponent.cs" />
     <Compile Include="Components\CircleComponent.cs" />
+    <Compile Include="Components\LightSourceComponent.cs" />
     <Compile Include="Components\ObjModelComponent.cs" />
     <Compile Include="Components\CubeComponentTextured.cs" />
     <Compile Include="Components\GridComponentTextured.cs" />
-    <Compile Include="Components\Games\TexturingGame.cs" />
+    <Compile Include="Games\LightingGame.cs" />
+    <Compile Include="Games\TexturingGame.cs" />
+    <Compile Include="InputStructures\VertexPositionNormalWorldPosTexture.cs" />
+    <Compile Include="Lighting\AbstractLight.cs" />
+    <Compile Include="Lighting\PointLight.cs" />
+    <Compile Include="Materials\AbstractMaterial.cs" />
+    <Compile Include="Materials\SilverMaterial.cs" />
     <Compile Include="ObjLoader.cs" />
     <Compile Include="TextureLoader.cs" />
     <Compile Include="Components\CubeComponent.cs" />
@@ -94,17 +101,17 @@
     <Compile Include="Components\AbstractComponent.cs" />
     <Compile Include="Components\SphereComponent.cs" />
     <Compile Include="FileReader.cs" />
-    <Compile Include="VertexPositionColorTexture.cs" />
-    <Compile Include="Components\Games\PingPong.cs" />
+    <Compile Include="InputStructures\VertexPositionColorTexture.cs" />
+    <Compile Include="Games\PingPong.cs" />
     <Compile Include="InputDevice.cs" />
     <Compile Include="Components\TriangleComponent.cs" />
-    <Compile Include="Components\Games\TriangleGame.cs" />
-    <Compile Include="vertexPositionColor.cs" />
-    <Compile Include="Components\Games\Game.cs" />
+    <Compile Include="Games\TriangleGame.cs" />
+    <Compile Include="InputStructures\vertexPositionColor.cs" />
+    <Compile Include="Games\Game.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Components\Games\WhirlingCubeGame.cs" />
-    <Compile Include="VertexPositionNormalTexture.cs" />
+    <Compile Include="Games\WhirlingCubeGame.cs" />
+    <Compile Include="InputStructures\VertexPositionNormalTexture.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -123,32 +130,19 @@
     <Content Include="3t.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="MiniCircle.fx" />
-    <Content Include="MiniTexture.fx">
+    <Content Include="Shaders\LightingShaders.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="MiniLighting.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="Shaders\MiniCube.fx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="MiniCube.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="pxlShader.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="CubeVrtShader.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="TextureShaders.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="Shaders\TextureShaders.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="text.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="toiletTexture.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="vrtShader.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

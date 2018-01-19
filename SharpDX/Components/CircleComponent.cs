@@ -76,11 +76,10 @@ namespace SharpDX.Components
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
         }
 
-
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
         {
             Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
-            var worldViewProj = transform * proj;
+            var worldViewProj = transform * view * proj;
 
             deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
             deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
@@ -94,6 +93,11 @@ namespace SharpDX.Components
 
             Translation = new Vector3(0,0,0);
         }
-     
+
+        public override void Dispose()
+        {
+            vertexBuffer.Dispose();        
+            constantBuffer.Dispose();
+        }
     }
 }

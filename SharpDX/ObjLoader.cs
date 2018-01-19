@@ -93,6 +93,8 @@ namespace SharpDX
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, vertList.ToArray());
         }
 
+
+
         VertexPositionNormalTexture GenerateVertex(string elem, List<Vector4> positions, List<Vector2> texCoords, List<Vector4> normals)
         {
             int p, t, n;

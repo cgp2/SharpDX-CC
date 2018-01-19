@@ -60,6 +60,8 @@ namespace SharpDX.Components
             };
             sampler = new SamplerState(device, samplerStateDescription);
 
+            initialVertices = t;
+
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
             constantBuffer = new Direct3D11.Buffer(device, SharpDX.Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, Direct3D11.BindFlags.ConstantBuffer, Direct3D11.CpuAccessFlags.None, Direct3D11.ResourceOptionFlags.None, 0);
         }
@@ -67,7 +69,7 @@ namespace SharpDX.Components
         public VertexPositionNormalTexture[] Transformation(VertexPositionNormalTexture[] vertices, Vector3 translation, Matrix rotation)
         {
             var ret = new VertexPositionNormalTexture[vertices.Length];
-            Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(rotation), translation);
+            Matrix transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, 1.0f, 1.0f), Quaternion.RotationMatrix(rotation), translation);
 
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -85,12 +87,11 @@ namespace SharpDX.Components
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
         }
 
-
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
         {
             transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
             WorldPosition = Vector3.Transform(InitialPosition, transform);
-            var worldViewProj = transform * proj;
+            var worldViewProj = transform * view * proj;
 
             deviceContext.PixelShader.SetShaderResource(0, textureView);
             deviceContext.PixelShader.SetSampler(0, sampler);
@@ -109,7 +110,15 @@ namespace SharpDX.Components
 
             deviceContext.VertexShader.SetConstantBuffer(0, initialConstantBuffer);
             deviceContext.PixelShader.SetConstantBuffer(0, initialConstantBuffer);
-            
+        }
+
+        public override void Dispose()
+        {
+            vertexBuffer.Dispose();
+            sampler.Dispose();
+            texture.Dispose();
+            textureView.Dispose();
+            constantBuffer.Dispose();
         }
     }
 

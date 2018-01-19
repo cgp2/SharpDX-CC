@@ -48,6 +48,8 @@ namespace SharpDX
 
         public bool IsActive { get { return true; } }
 
+        protected List<Components.AbstractComponent> components = new List<Components.AbstractComponent>();
+
         public Game()
         {
             renderForm = new RenderForm("Default3D");
@@ -55,11 +57,8 @@ namespace SharpDX
             renderForm.AllowUserResizing = false;
             InitializeDeviceResources();
 
-            Camera = new CameraComponent((float)renderForm.Width / renderForm.Height, new Vector3(0, 6, -3), new Vector3(0, 3, 0));
-
             inp = new InputDevice(this);
         }
-
 
         protected void InitializeDeviceResources()
         {
@@ -89,7 +88,6 @@ namespace SharpDX
             {
                 renderTargetView = new RenderTargetView(device, backBuffer);
             }
-
         }
 
         protected void InitializeDeviceResources(Direct3D11.Device dev)
@@ -107,9 +105,7 @@ namespace SharpDX
             {
                 renderTargetView = new RenderTargetView(device, backBuffer);
             }
-
         }
-
 
         protected void InitializeShaders()
         { 
@@ -146,7 +142,6 @@ namespace SharpDX
             pixelShader.Dispose();
             inputLayout.Dispose();
             inputSignature.Dispose();
-   
         }
     }
 }

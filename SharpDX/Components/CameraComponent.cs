@@ -11,22 +11,25 @@ namespace SharpDX
     public class CameraComponent
     {
         public Matrix View, Proj, RotMatrix;
-        public Vector3 EyePosition, target, up;
+        public Vector3 EyePosition, TargetPosition, UpVector;
         public float FOV, aspect;
 
         private float yaw = 0, pitch = 0;
 
-
-        public CameraComponent(float aspect, Vector3 pos, Vector3 trgt)
+        public CameraComponent(float aspect, Vector3 pos, float yaw, float pitch)
         {
+            this.yaw = yaw;
+            this.pitch = pitch;
+            var yawRad = MathUtil.DegreesToRadians(this.yaw);
+            var pitchRad = MathUtil.DegreesToRadians(this.pitch);
+            RotMatrix = Matrix.RotationYawPitchRoll(yawRad, pitchRad, MathUtil.DegreesToRadians(0));
             EyePosition = pos;
-            target = trgt;
-            up = Vector3.UnitY;
+            TargetPosition = RotMatrix.Forward + EyePosition;
+            UpVector = RotMatrix.Up;
             this.aspect = aspect;
 
-            View = Matrix.LookAtLH(pos, trgt, up);
+            UpdateViewMatrix();
             Proj = Matrix.PerspectiveFovLH((float)Math.PI / 2.0f, aspect, 0.1f, 100.0f);
-            RotMatrix = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(0), MathUtil.DegreesToRadians(0), MathUtil.DegreesToRadians(0));
         }
 
         public Matrix World2Proj(Matrix worldCoord)
@@ -37,56 +40,90 @@ namespace SharpDX
 
         public Vector3 ChangeTargetPosition(float yaw, float pitch)
         {
-            var yawRad = MathUtil.DegreesToRadians(0.04f*yaw);
-            var pitchRad = MathUtil.DegreesToRadians(0.04f * pitch);
+            this.yaw += 0.04f * yaw;
+            this.pitch += 0.04f * pitch;
+            var yawRad = MathUtil.DegreesToRadians(this.yaw);
+            var pitchRad = MathUtil.DegreesToRadians(this.pitch);
 
             RotMatrix = Matrix.RotationYawPitchRoll(yawRad, pitchRad, MathUtil.DegreesToRadians(0));
-            target  = RotMatrix.Forward + EyePosition;
-            up = RotMatrix.Up;
+            TargetPosition  = RotMatrix.Forward + EyePosition;
+            UpVector = RotMatrix.Up;
             UpdateViewMatrix();
-            return target;
+            return TargetPosition;
         }
 
         private Matrix UpdateViewMatrix()
         {
-            View = Matrix.LookAtLH(EyePosition, target, up);
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, UpVector);
             return View;
         }
 
         public void MoveForward()
         {
-            Vector3 scale = Vector3.Multiply(RotMatrix.Forward, -1.3f);
+            Vector3 scale = Vector3.Multiply(RotMatrix.Forward, 1.3f);
             EyePosition += scale;
-            target += scale;
+            TargetPosition += scale;
 
-            View = Matrix.LookAtLH(EyePosition, target, RotMatrix.Up);
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
         }
 
         public void MoveBackward()
         {
-            Vector3 scale = Vector3.Multiply(RotMatrix.Backward, -1.3f);
+            Vector3 scale = Vector3.Multiply(RotMatrix.Backward, 1.3f);
             EyePosition += scale;
-            target += scale;
+            TargetPosition += scale;
 
-            View = Matrix.LookAtLH(EyePosition, target, RotMatrix.Up);
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
         }
 
         public void MoveRight()
         {
-            Vector3 scale = Vector3.Multiply(RotMatrix.Right, 1.3f);
+            Vector3 scale = Vector3.Multiply(RotMatrix.Left, 1.3f);
             EyePosition += scale;
-            target += scale;
+            TargetPosition += scale;
 
-            View = Matrix.LookAtLH(EyePosition, target, RotMatrix.Up);
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
         }
 
         public void MoveLeft()
         {
-            Vector3 scale = Vector3.Multiply(RotMatrix.Left, 1.3f);
+            Vector3 scale = Vector3.Multiply(RotMatrix.Right, 1.3f);
             EyePosition += scale;
-            target += scale;
+            TargetPosition += scale;
 
-            View = Matrix.LookAtLH(EyePosition, target, RotMatrix.Up);
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
+        }
+
+        public void MoveForwardAxis()
+        {
+            EyePosition.Z += 1.3f;
+            TargetPosition.Z += 1.3f;
+
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
+        }
+
+        public void MoveBackwardAxis()
+        {
+            EyePosition.Z -= 1.3f;
+            TargetPosition.Z -= 1.3f;
+
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
+        }
+
+        public void MoveRightAxis()
+        {
+            EyePosition.X += 1.3f;
+            TargetPosition.X += 1.3f;
+
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
+        }
+
+        public void MoveLeftAxis()
+        {
+            EyePosition.X -= 1.3f;
+            TargetPosition.X -= 1.3f;
+
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
         }
 
     }

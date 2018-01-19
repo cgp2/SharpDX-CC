@@ -23,12 +23,10 @@ namespace SharpDX
     {
         static void Main(string[] args)
         {
-            using (var game = new Games.TexturingGame())
+            using (var game = new Games.LightingGame())
             {
                 game.Run();
             }
-
-            //CubeApp.Run();
         }
     }
 }

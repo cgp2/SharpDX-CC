@@ -30,7 +30,7 @@ namespace SharpDX.Components
         SamplerStateDescription samplerStateDescription;
         SamplerState sampler;
 
-        public GridComponentTextured(Direct3D11.Device device)
+        public GridComponentTextured(Direct3D11.Device device, string pathTexture)
         {
             this.device = device;
 
@@ -87,7 +87,6 @@ namespace SharpDX.Components
                     index += 1;
                     s++;
 
-
                     // Bottom right.
                     positionX = (float)(i + 1);
                     positionZ = (float)j;
@@ -119,7 +118,7 @@ namespace SharpDX.Components
                 }
             }
 
-            texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "1t.png"));
+            texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), pathTexture));
             textureView = new ShaderResourceView(device, texture);
             samplerStateDescription = new SamplerStateDescription
             {
@@ -157,10 +156,9 @@ namespace SharpDX.Components
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
         }
 
-
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
         {
-            var worldViewProj = proj;
+            var worldViewProj = view * proj;
 
             deviceContext.PixelShader.SetShaderResource(0, textureView);
             deviceContext.PixelShader.SetSampler(0, sampler);
@@ -179,6 +177,10 @@ namespace SharpDX.Components
             deviceContext.PixelShader.SetConstantBuffer(0, initialConstantBuffer);
         }
 
-      
+        public override void Dispose()
+        {
+            vertexBuffer.Dispose();
+            constantBuffer.Dispose();
+        }
     }
 }

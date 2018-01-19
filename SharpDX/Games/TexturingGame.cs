@@ -46,24 +46,27 @@ namespace SharpDX.Games
         ObjModelComponent toil;
         ObjModelComponent cow;
         SphereComponent sphere;
-
-        List<AbstractComponent> components = new List<AbstractComponent>();
+    
         List<AbstractComponent> collectedComponents = new List<AbstractComponent>();
 
         public TexturingGame()
         {
             InitializeShaders();
+            
+            Camera = new CameraComponent((float)renderForm.Width / renderForm.Height, new Vector3(0, 6, -3), 180f, -30f);
         }
 
         new protected void InitializeShaders()
         {
-            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile("TextureShaders.hlsl", "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
+            var location = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var path = Path.GetDirectoryName(location).ToString() + "\\Shaders\\TextureShaders.hlsl";
+            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(path, "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
             {
                 inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
                 vertexShader = new Direct3D11.VertexShader(device, vertexShaderByteCode);
             }
 
-            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile("TextureShaders.hlsl", "PS", "ps_5_0", ShaderFlags.PackMatrixRowMajor))
+            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(path, "PS", "ps_5_0", ShaderFlags.PackMatrixRowMajor))
             {
                 pixelShader = new Direct3D11.PixelShader(device, pixelShaderByteCode);
             }
@@ -93,7 +96,6 @@ namespace SharpDX.Games
                 OptionFlags = ResourceOptionFlags.None
             });
 
-
             depthView = new DepthStencilView(device, depthBuffer);
         }
 
@@ -107,7 +109,7 @@ namespace SharpDX.Games
             trg.Update();
             //trg.Scaling = new Vector3(2f, 2f, 2f);
             trg.RotationCenter = trg.InitialPosition;      
-          //  components.Add(trg);
+            components.Add(trg);
 
             cube1 = new CubeComponentTextured(device, "1t.png");
             cube1.InitialPosition = new Vector3(5f, 4f, 2f);
@@ -137,7 +139,7 @@ namespace SharpDX.Games
             cube4.Update();
             components.Add(cube4);
 
-            cube5 = new CubeComponentTextured(device, "3t.png");
+            cube5 = new CubeComponentTextured(device, "download.png");
             cube5.InitialPosition = new Vector3(-12f, 4f, -20f);
             cube5.RotationCenter = cube5.InitialPosition;
         //  cube5.Scaling = new Vector3(0.3f, 0.3f, 0.3f);
@@ -156,7 +158,7 @@ namespace SharpDX.Games
             cube7.RotationCenter = cube7.InitialPosition;
         //  cube7.Scaling = new Vector3(0.3f, 0.3f, 0.3f);
             cube7.Update();
-            //components.Add(cube7);
+            components.Add(cube7);
 
             cube8 = new CubeComponentTextured(device, "text.png");
             cube8.InitialPosition = new Vector3(2f, 4f, 26f);
@@ -165,7 +167,7 @@ namespace SharpDX.Games
             cube8.Update();
             components.Add(cube8);
 
-            grid = new GridComponentTextured(device);
+            grid = new GridComponentTextured(device, "1t.png");
             grid.InitialPosition = new Vector3(-50f, 0f, -50f);
             grid.Update();
 
@@ -174,7 +176,7 @@ namespace SharpDX.Games
             cow = new ObjModelComponent(device, path, "download.png");
             cow.Translation = new Vector3(0f, 3f, 0f);
             cow.RotationCenter += new Vector3(0, 0.7f, -0.2f);
-            cow.Scaling = new Vector3(0.002f, 0.002f, 0.002f);
+            cow.Scaling = new Vector3(0.05f, 0.002f, 0.002f);
             cow.Update();
             //cow.Rotation = Matrix.RotationY(MathUtil.DegreesToRadians(90f));
             //cow.Translation = new Vector3(1.2f, 0f, 0f);
@@ -182,9 +184,9 @@ namespace SharpDX.Games
             location = System.Reflection.Assembly.GetExecutingAssembly().Location;
             path = Path.GetDirectoryName(location).ToString() + "\\Toilet.obj";
             toil = new ObjModelComponent(device, path, "2.png");
-            toil.Scaling = new Vector3(0.02f, 0.02f, 0.02f);
+            toil.Scaling = new Vector3(0.2f, 0.02f, 0.02f);
             toil.Rotation = Matrix.RotationY(MathUtil.DegreesToRadians(180f));
-            toil.Translation = new Vector3(2f, 2f, 0f);
+            toil.Translation = new Vector3(10f, 2f, 0f);
             toil.Update();
             toil.RotationCenter = toil.InitialPosition;
             components.Add(toil);
@@ -221,21 +223,21 @@ namespace SharpDX.Games
 
             var viewProj = Matrix.Multiply(Camera.View, Camera.Proj);
 
-            trg.Draw(deviceContext, viewProj, constantBuffer);
-            cube1.Draw(deviceContext, viewProj, constantBuffer);
-            cube2.Draw(deviceContext, viewProj, constantBuffer);
-            cube3.Draw(deviceContext, viewProj, constantBuffer);
-            cube4.Draw(deviceContext, viewProj, constantBuffer);
-            cube5.Draw(deviceContext, viewProj, constantBuffer);
-            cube6.Draw(deviceContext, viewProj, constantBuffer);
-            cube7.Draw(deviceContext, viewProj, constantBuffer);
-            cube8.Draw(deviceContext, viewProj, constantBuffer);
-            grid.Draw(deviceContext, viewProj, constantBuffer);
+            trg.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube1.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube2.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube3.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube4.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube5.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube6.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube7.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube8.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            grid.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
 
-            toil.Draw(deviceContext, viewProj, constantBuffer);
-            cow.Draw(deviceContext, viewProj, constantBuffer);
+            toil.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cow.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
 
-            sphere.Draw(deviceContext, viewProj, constantBuffer);
+            sphere.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
 
             swapChain.Present(1, PresentFlags.None);
         }
@@ -245,7 +247,7 @@ namespace SharpDX.Games
             switch (key)
             {
                 case Keys.W:
-                    Camera.MoveForward();
+                    Camera.MoveForwardAxis();
                     cow.Rotation *= Matrix.RotationYawPitchRoll(0, 0.3f, 0);
                     cow.Translation += new Vector3(0, 0, 1.3f);
                     sphere.Rotation *= Matrix.RotationYawPitchRoll(0, 0.3f, 0);
@@ -257,7 +259,7 @@ namespace SharpDX.Games
                     }
                     break;
                 case Keys.S:
-                    Camera.MoveBackward();
+                    Camera.MoveBackwardAxis();
                     cow.Rotation *= Matrix.RotationYawPitchRoll(0, -0.3f, 0);
                     cow.Translation += new Vector3(0, 0, -1.3f);
                     sphere.Rotation *= Matrix.RotationYawPitchRoll(0, -0.3f, 0);
@@ -269,7 +271,7 @@ namespace SharpDX.Games
                     }
                     break;
                 case Keys.A:
-                    Camera.MoveLeft();
+                    Camera.MoveLeftAxis();
                     cow.Rotation *= Matrix.RotationYawPitchRoll(0, 0, 0.3f);
                     cow.Translation += new Vector3(-1.3f, 0, 0);
                     sphere.Rotation *= Matrix.RotationYawPitchRoll(0, 0, 0.3f);
@@ -281,7 +283,7 @@ namespace SharpDX.Games
                     }
                     break;
                 case Keys.D:
-                    Camera.MoveRight();
+                    Camera.MoveRightAxis();
                     cow.Rotation *= Matrix.RotationYawPitchRoll(0, 0, -0.3f);
                     cow.Translation += new Vector3(1.3f, 0, 0);
                     sphere.Rotation *= Matrix.RotationYawPitchRoll(0, 0, -0.3f);
@@ -357,7 +359,7 @@ namespace SharpDX.Games
 
         public override void MouseMoved(float x, float y)
         {
-            Camera.ChangeTargetPosition(x, y);
+            //Camera.ChangeTargetPosition(x, y);
         }
 
         public double GetRandomNumber(double minimum, double maximum)
@@ -367,10 +369,13 @@ namespace SharpDX.Games
         }
         public void Dispose()
         {
+            foreach (AbstractComponent comp in components)
+                comp.Dispose();    
             DisposeBase();
             constantBuffer.Dispose();
             depthBuffer.Dispose();
             depthView.Dispose();
+
         }
     }
 }

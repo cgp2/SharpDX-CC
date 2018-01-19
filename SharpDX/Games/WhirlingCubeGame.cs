@@ -12,6 +12,7 @@ using SharpDX.D3DCompiler;
 using System.Diagnostics;
 using System.Windows.Forms;
 using SharpDX.Components;
+using System.IO;
 
 namespace SharpDX.Games
 {
@@ -40,17 +41,21 @@ namespace SharpDX.Games
         public WhirlingCubeGame()
         {
             InitializeShaders();
+
+            Camera = new CameraComponent((float)renderForm.Width / renderForm.Height, new Vector3(0, 2, -3), 0, 30);
         }
 
         new protected void InitializeShaders()
         {
-            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile("MiniCube.fx", "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
+            var location = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var path = Path.GetDirectoryName(location).ToString() + "\\Shaders\\MiniCube.fx";
+            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(path, "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
             {
                 inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
                 vertexShader = new Direct3D11.VertexShader(device, vertexShaderByteCode);
             }
 
-            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile("MiniCube.fx", "PS", "ps_5_0", ShaderFlags.PackMatrixRowMajor))
+            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(path, "PS", "ps_5_0", ShaderFlags.PackMatrixRowMajor))
             {
                 pixelShader = new Direct3D11.PixelShader(device, pixelShaderByteCode);
             }
@@ -146,18 +151,18 @@ namespace SharpDX.Games
             var viewProj = Matrix.Multiply(Camera.View, Camera.Proj);
 
            
-            cube1.Draw(deviceContext, viewProj, constantBuffer);       
+            cube1.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);       
 
-            cube2.Draw(deviceContext, viewProj, constantBuffer);
+            cube2.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
 
-            cube3.Draw(deviceContext, viewProj, constantBuffer);
+            cube3.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
 
-            cube4.Draw(deviceContext, viewProj, constantBuffer);
+            cube4.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
          
-            grid.Draw(deviceContext, viewProj, constantBuffer);
+            grid.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
            // trg.Draw(deviceContext, viewProj, constantBuffer);
 
-            sphere.Draw(deviceContext, viewProj, constantBuffer);
+            sphere.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
 
 
             swapChain.Present(1, PresentFlags.None);
