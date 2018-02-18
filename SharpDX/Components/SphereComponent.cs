@@ -118,7 +118,7 @@ namespace SharpDX.Components
             clock.Start();
         }
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
         { 
             var time = clock.ElapsedMilliseconds / 1000f;
 
@@ -139,9 +139,6 @@ namespace SharpDX.Components
             deviceContext.InputAssembler.SetVertexBuffers(0, new Direct3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
 
             //deviceContext.Draw(t.Count(), 0);
-
-            deviceContext.VertexShader.SetConstantBuffer(0, initialConstantBuffer);
-            deviceContext.PixelShader.SetConstantBuffer(0, initialConstantBuffer);
         }
 
         public VertexPositionNormalTexture[] Transformation(VertexPositionNormalTexture[] vertices, Vector3 translation, Matrix rotation)

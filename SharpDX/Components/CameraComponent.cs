@@ -29,7 +29,7 @@ namespace SharpDX
             this.aspect = aspect;
 
             UpdateViewMatrix();
-            Proj = Matrix.PerspectiveFovLH((float)Math.PI / 2.0f, aspect, 0.1f, 100.0f);
+            Proj = Matrix.PerspectiveFovLH((float)Math.PI / 2.0f, aspect, 0.1f, 1000.0f);
         }
 
         public Matrix World2Proj(Matrix worldCoord)

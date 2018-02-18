@@ -71,8 +71,8 @@ namespace SharpDX.Games
             deviceContext.PixelShader.Set(pixelShader);
 
 
-            inputLayout = new InputLayout(device, inputSignature, inputElements);
-            deviceContext.InputAssembler.InputLayout = inputLayout;
+            inputLayoutMain = new InputLayout(device, inputSignature, inputElements);
+            deviceContext.InputAssembler.InputLayout = inputLayoutMain;
 
 
             constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
@@ -160,9 +160,9 @@ namespace SharpDX.Games
             deviceContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0f, 0);
             deviceContext.ClearRenderTargetView(renderTargetView, Color.Black);
 
-            box.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            barBottom.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            barTop.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            box.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            barBottom.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            barTop.Draw(deviceContext, Camera.Proj, Camera.View, true);
 
             CheckCircleOverlap();
             ChechDirection();
@@ -171,7 +171,7 @@ namespace SharpDX.Games
 
             crcl1.Translation = crcl1.InitialPosition - new Vector3(0,2,0);
             //crcl1.Translation = Matrix.Translation(crcl1.WorldPosition);         
-            crcl1.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            crcl1.Draw(deviceContext, Camera.Proj, Camera.View, true);
 
             swapChain.Present(1, PresentFlags.None);
         }

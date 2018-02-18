@@ -27,7 +27,7 @@ namespace SharpDX.Components
         public Matrix transform;
         public Vector4 WorldPosition;
 
-        public abstract void Draw (Direct3D11.DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer);
+        public abstract void Draw (Direct3D11.DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput);
 
         public abstract void Update();
 
@@ -39,6 +39,7 @@ namespace SharpDX.Components
             public Vector4 Absorption;
             public Vector4 Ambient;
             public float Shiness;
+            public float dum1, dum2, dum3;
         }
 
         public struct MatrixBufferStruct

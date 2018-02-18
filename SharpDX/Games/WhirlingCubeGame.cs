@@ -64,8 +64,8 @@ namespace SharpDX.Games
             deviceContext.PixelShader.Set(pixelShader);
             
 
-            inputLayout = new InputLayout(device, inputSignature, inputElements);
-            deviceContext.InputAssembler.InputLayout = inputLayout;
+            inputLayoutMain = new InputLayout(device, inputSignature, inputElements);
+            deviceContext.InputAssembler.InputLayout = inputLayoutMain;
 
 
             constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
@@ -150,26 +150,21 @@ namespace SharpDX.Games
 
             var viewProj = Matrix.Multiply(Camera.View, Camera.Proj);
 
-           
-            cube1.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);       
+            cube1.Draw(deviceContext, Camera.Proj, Camera.View, true);       
 
-            cube2.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube2.Draw(deviceContext, Camera.Proj, Camera.View, true);
 
-            cube3.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube3.Draw(deviceContext, Camera.Proj, Camera.View, true);
 
-            cube4.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            cube4.Draw(deviceContext, Camera.Proj, Camera.View, true);
          
-            grid.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            grid.Draw(deviceContext, Camera.Proj, Camera.View, true);
            // trg.Draw(deviceContext, viewProj, constantBuffer);
 
-            sphere.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-
+            sphere.Draw(deviceContext, Camera.Proj, Camera.View, true);
 
             swapChain.Present(1, PresentFlags.None);
         }
-
-
-    
 
         public override void KeyPressed(Keys key)
         {

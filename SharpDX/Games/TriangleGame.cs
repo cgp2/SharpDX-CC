@@ -18,9 +18,9 @@ namespace SharpDX.Games
     {
         private VertexPositionColor[] vertices = new VertexPositionColor[]
             {
-                new VertexPositionColor(new Vector3(-0.5f, 0.5f, 0.0f), SharpDX.Color.Red),
-                new VertexPositionColor(new Vector3(0.5f, 0.5f, 0.0f), SharpDX.Color.Blue),
-                new VertexPositionColor(new Vector3(0.0f, -0.5f, 0.0f), SharpDX.Color.Green),
+                new VertexPositionColor(new Vector4(-0.5f, 0.5f, 0.0f, 1f), SharpDX.Color.Red),
+                new VertexPositionColor(new Vector4(0.5f, 0.5f, 0.0f, 1f), SharpDX.Color.Blue),
+                new VertexPositionColor(new Vector4(0.0f, -0.5f, 0.0f,1f), SharpDX.Color.Green),
             };
 
         public TriangleGame()

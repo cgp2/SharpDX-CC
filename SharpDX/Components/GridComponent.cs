@@ -148,7 +148,7 @@ namespace SharpDX.Components
         }
 
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
         {
             var worldViewProj = view * proj;
 

@@ -67,7 +67,7 @@ namespace SharpDX.Components
         }
 
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
         {
             deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vector4>() * 2, 0));
 

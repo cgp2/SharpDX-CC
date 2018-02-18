@@ -87,7 +87,7 @@ namespace SharpDX.Components
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
         }
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
         {
             transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
             WorldPosition = Vector3.Transform(InitialPosition, transform);
@@ -97,9 +97,6 @@ namespace SharpDX.Components
             deviceContext.PixelShader.SetSampler(0, sampler);
             deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
 
-            //float brightness = 1;
-            //deviceContext.UpdateSubresource(ref brightness, constantBuffer, 0);
-
             deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
             deviceContext.PixelShader.SetConstantBuffer(0, constantBuffer);
 
@@ -107,9 +104,6 @@ namespace SharpDX.Components
 
             deviceContext.InputAssembler.SetVertexBuffers(0, new Direct3D11.VertexBufferBinding(vertexBuffer, SharpDX.Utilities.SizeOf<VertexPositionColorTexture>(), 0));
             deviceContext.Draw(vertices.Count(), 0);
-
-            deviceContext.VertexShader.SetConstantBuffer(0, initialConstantBuffer);
-            deviceContext.PixelShader.SetConstantBuffer(0, initialConstantBuffer);
         }
 
         public override void Dispose()

@@ -94,7 +94,7 @@ namespace SharpDX.Components
         }
 
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, Direct3D11.Buffer initialConstantBuffer)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
         {
             var time = clock.ElapsedMilliseconds / 1000f;
 
@@ -114,8 +114,6 @@ namespace SharpDX.Components
 
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
             deviceContext.Draw(36, 0);
-
-            deviceContext.VertexShader.SetConstantBuffer(0, initialConstantBuffer);
         }
 
         public override void Dispose()

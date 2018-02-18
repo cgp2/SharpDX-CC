@@ -7,7 +7,7 @@ using SharpDX.Direct3D11;
 
 namespace SharpDX.Lighting
 {
-    class AbstractLight 
+    abstract class AbstractLight 
     {
         public Vector4 WorldPosition;
         public Vector4 Color;

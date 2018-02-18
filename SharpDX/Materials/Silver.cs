@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace SharpDX.Materials
 {
-    class SilverMaterial : AbstractMaterial
+    class Silver : AbstractMaterial
     {
-        public SilverMaterial()
+        public Silver()
         {
             Diffuse = new Vector3(0.2775f, 0.2775f, 0.2775f);
             Absorption = new Vector3(0.773911f, 0.773911f, 0.773911f);
-            Ambient = new Vector3(0.23125f, 0.23125f, 0.23125f) ;
+            Ambient = new Vector3(0.1f, 0.1f, 0.1f) ;
             Shiness = 89.7f;
         }
     }

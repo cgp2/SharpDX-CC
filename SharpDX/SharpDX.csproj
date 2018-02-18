@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SharpDX</RootNamespace>
     <AssemblyName>SharpDX</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -50,6 +50,9 @@
     <Reference Include="SharpDX.Desktop, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.Desktop.4.0.1\lib\net45\SharpDX.Desktop.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX.Diagnostics, Version=2.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.Diagnostics.2.0.4\lib\net20\SharpDX.Diagnostics.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX.Direct2D1, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.Direct2D1.4.0.1\lib\net45\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
@@ -83,18 +86,21 @@
     <Compile Include="Components\BoxComponent.cs" />
     <Compile Include="Components\CameraComponent.cs" />
     <Compile Include="Components\CircleComponent.cs" />
-    <Compile Include="Components\LightSourceComponent.cs" />
     <Compile Include="Components\ObjModelComponent.cs" />
     <Compile Include="Components\CubeComponentTextured.cs" />
     <Compile Include="Components\GridComponentTextured.cs" />
+    <Compile Include="Components\PlaneComponent.cs" />
     <Compile Include="Games\LightingGame.cs" />
     <Compile Include="Games\TexturingGame.cs" />
     <Compile Include="InputStructures\VertexPositionNormalWorldPosTexture.cs" />
     <Compile Include="Lighting\AbstractLight.cs" />
+    <Compile Include="Lighting\SpotLight.cs" />
     <Compile Include="Lighting\PointLight.cs" />
     <Compile Include="Materials\AbstractMaterial.cs" />
-    <Compile Include="Materials\SilverMaterial.cs" />
+    <Compile Include="Materials\BlackPlastic.cs" />
+    <Compile Include="Materials\Silver.cs" />
     <Compile Include="ObjLoader.cs" />
+    <Compile Include="ShadowMap.cs" />
     <Compile Include="TextureLoader.cs" />
     <Compile Include="Components\CubeComponent.cs" />
     <Compile Include="Components\GridComponent.cs" />
@@ -130,14 +136,23 @@
     <Content Include="3t.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Shaders\GeometryShader.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\ShadowLightingShaders.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Shaders\LightingShaders.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Shaders\MiniCube.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\ShadowMapShaders.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Shaders\TextureShaders.hlsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="text.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

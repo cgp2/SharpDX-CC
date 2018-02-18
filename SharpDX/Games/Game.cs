@@ -36,7 +36,9 @@ namespace SharpDX
         protected Direct3D11.PixelShader pixelShader;
         protected Viewport viewport;
         protected ShaderSignature inputSignature;
-        protected Direct3D11.InputLayout inputLayout;
+        protected Direct3D11.InputLayout inputLayoutMain;
+
+        protected Factory factory;
 
         protected SwapChainDescription swapChainDescriptor;
 
@@ -72,17 +74,17 @@ namespace SharpDX
                 OutputHandle = renderForm.Handle,
                 SampleDescription = new SampleDescription(1, 0),
                 SwapEffect = SwapEffect.Discard,
-                Usage = Usage.RenderTargetOutput
+                Usage = Usage.RenderTargetOutput,
             };
 
             Direct3D11.Device.CreateWithSwapChain(DriverType.Hardware, Direct3D11.DeviceCreationFlags.None, swapChainDescriptor, out device, out swapChain);
             deviceContext = device.ImmediateContext;
-            
+
             viewport = new Viewport(0, 0, width, height, 0.0f, 1.0f);
             deviceContext.Rasterizer.SetViewport(viewport);
 
-            var factory = swapChain.GetParent<Factory>();
-            factory.MakeWindowAssociation(renderForm.Handle, WindowAssociationFlags.IgnoreAll);
+            factory = swapChain.GetParent<Factory>();
+            //factory.MakeWindowAssociation(renderForm.Handle, WindowAssociationFlags.IgnoreAll);
 
             using (Direct3D11.Texture2D backBuffer = swapChain.GetBackBuffer<Direct3D11.Texture2D>(0))
             {
@@ -90,22 +92,6 @@ namespace SharpDX
             }
         }
 
-        protected void InitializeDeviceResources(Direct3D11.Device dev)
-        {
-            device = dev;
-            deviceContext = device.ImmediateContext;
-
-            viewport = new Viewport(0, 0, width, height, 0.0f, 1.0f);
-            deviceContext.Rasterizer.SetViewport(viewport);
-
-            var factory = swapChain.GetParent<Factory>();
-            factory.MakeWindowAssociation(renderForm.Handle, WindowAssociationFlags.IgnoreAll);
-
-            using (Direct3D11.Texture2D backBuffer = swapChain.GetBackBuffer<Direct3D11.Texture2D>(0))
-            {
-                renderTargetView = new RenderTargetView(device, backBuffer);
-            }
-        }
 
         protected void InitializeShaders()
         { 
@@ -123,8 +109,8 @@ namespace SharpDX
             deviceContext.VertexShader.Set(vertexShader);
             deviceContext.PixelShader.Set(pixelShader);
 
-            inputLayout = new InputLayout(device, inputSignature, inputElements);
-            deviceContext.InputAssembler.InputLayout = inputLayout;
+            inputLayoutMain = new InputLayout(device, inputSignature, inputElements);
+            deviceContext.InputAssembler.InputLayout = inputLayoutMain;
         }
 
         public abstract void KeyPressed(Keys key);
@@ -140,7 +126,7 @@ namespace SharpDX
             deviceContext.Dispose();
             vertexShader.Dispose();
             pixelShader.Dispose();
-            inputLayout.Dispose();
+            inputLayoutMain.Dispose();
             inputSignature.Dispose();
         }
     }

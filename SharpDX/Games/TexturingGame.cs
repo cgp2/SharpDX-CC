@@ -74,8 +74,8 @@ namespace SharpDX.Games
             deviceContext.VertexShader.Set(vertexShader);
             deviceContext.PixelShader.Set(pixelShader);
 
-            inputLayout = new InputLayout(device, inputSignature, inputElements);
-            deviceContext.InputAssembler.InputLayout = inputLayout;
+            inputLayoutMain = new InputLayout(device, inputSignature, inputElements);
+            deviceContext.InputAssembler.InputLayout = inputLayoutMain;
 
             constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
@@ -167,7 +167,7 @@ namespace SharpDX.Games
             cube8.Update();
             components.Add(cube8);
 
-            grid = new GridComponentTextured(device, "1t.png");
+            grid = new GridComponentTextured(device,1, "1t.png");
             grid.InitialPosition = new Vector3(-50f, 0f, -50f);
             grid.Update();
 
@@ -223,21 +223,21 @@ namespace SharpDX.Games
 
             var viewProj = Matrix.Multiply(Camera.View, Camera.Proj);
 
-            trg.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            cube1.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            cube2.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            cube3.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            cube4.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            cube5.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            cube6.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            cube7.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            cube8.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            grid.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            trg.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            cube1.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            cube2.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            cube3.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            cube4.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            cube5.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            cube6.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            cube7.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            cube8.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            grid.Draw(deviceContext, Camera.Proj, Camera.View, true);
 
-            toil.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
-            cow.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            toil.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            cow.Draw(deviceContext, Camera.Proj, Camera.View, true);
 
-            sphere.Draw(deviceContext, Camera.Proj, Camera.View, constantBuffer);
+            sphere.Draw(deviceContext, Camera.Proj, Camera.View, true);
 
             swapChain.Present(1, PresentFlags.None);
         }
