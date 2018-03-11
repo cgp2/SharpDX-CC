@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharpDX.Direct2D1;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using SharpDX.Direct3D11;
 
@@ -13,7 +14,7 @@ namespace SharpDX
 {
     public class ObjLoader
     {
-        public void LoadObjModel(SharpDX.Direct3D11.Device device, string fileName, out Buffer vertexBuffer, out int verticesCount, out VertexPositionNormalTexture[] vertices)
+        public void LoadObjModel(SharpDX.Direct3D11.Device device, string fileName, out Buffer vertexBuffer, out int verticesCount, out VertexPositionNormalTexture[] vertices, out InputStructures.TrianglePositionNormalTextureInput[] trianglesPositionNormalTexture)
         {
             vertexBuffer = null;
             verticesCount = 0;
@@ -28,6 +29,7 @@ namespace SharpDX
             var texCoords = new List<Vector2>();
 
             var vertList = new List<VertexPositionNormalTexture>();
+            var trgList = new List<InputStructures.TrianglePositionNormalTextureInput>();
 
             var lines = File.ReadAllLines(fileName);
             for (int i = 0; i < lines.Length; i++)
@@ -53,25 +55,12 @@ namespace SharpDX
                         normals.Add(ParseNormal(vals));
                         break;
                     case "f":
-                        if (vals.Length < 4) continue;
-                        /*
-                        var v0 = GenerateVertex(vals[1], positions, texCoords, normals);
-                        var v1 = GenerateVertex(vals[2], positions, texCoords, normals);
-                        var v2 = GenerateVertex(vals[3], positions, texCoords, normals);
-                        var v3 = GenerateVertex(vals[4], positions, texCoords, normals);
-
-                        vertices.Add(v0);
-                        vertices.Add(v1);
-                        vertices.Add(v2);
-
-                        vertices.Add(v0);
-                        vertices.Add(v2);
-                        vertices.Add(v3);
-                        */
-
+                        if (vals.Length < 4)
+                            continue;
+                   
                         var v0 = GenerateVertex(vals[1], positions, texCoords, normals);
 
-                        for (int fInd = 2; fInd < vals.Length - 1; fInd++)
+                        for (var fInd = 2; fInd < vals.Length - 1; fInd++)
                         {
                             var v1 = GenerateVertex(vals[fInd], positions, texCoords, normals);
                             var v2 = GenerateVertex(vals[fInd + 1], positions, texCoords, normals);
@@ -79,6 +68,8 @@ namespace SharpDX
                             vertList.Add(v0);
                             vertList.Add(v1);
                             vertList.Add(v2);
+
+                            trgList.Add((new InputStructures.TrianglePositionNormalTextureInput(){Point1 = v0, Point2 = v1, Point3 = v2}));
                         }
 
                         break;
@@ -88,6 +79,7 @@ namespace SharpDX
             }
 
             vertices = vertList.ToArray();
+            trianglesPositionNormalTexture = trgList.ToArray();
             if (vertList.Count == 0) return;
             verticesCount = vertList.Count;
             vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, vertList.ToArray());
@@ -127,13 +119,13 @@ namespace SharpDX
             }
             if (indeces.Length == 2)
             {
-                // Position and texture coordinates provided
+                // Position and Texture coordinates provided
                 posInd = int.Parse(indeces[0]) - 1;
                 texInd = int.Parse(indeces[1]) - 1;
             }
             if (indeces.Length == 3)
             {
-                // Position, texture coordinates (maybe) and normal provided
+                // Position, Texture coordinates (maybe) and normal provided
                 posInd = int.Parse(indeces[0]) - 1;
                 if (!string.IsNullOrEmpty(indeces[1])) texInd = int.Parse(indeces[1]) - 1;
                 norInd = int.Parse(indeces[2]) - 1;

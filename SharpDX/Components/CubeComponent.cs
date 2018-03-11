@@ -17,9 +17,9 @@ namespace SharpDX.Components
         private Stopwatch clock = new Stopwatch();
         public CubeComponent(Direct3D11.Device device)
         {
-            this.device = device;
+            this.Device = device;
 
-            vertices = new Vector4[]
+            InitialPoints = new Vector4[]
             {
                 new Vector4(-1.0f, -1.0f, -1.0f, 1.0f), new Vector4(1.0f, 0.0f, 0.0f, 1.0f), // Front
                 new Vector4(-1.0f,  1.0f, -1.0f, 1.0f), new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
@@ -66,8 +66,8 @@ namespace SharpDX.Components
             ScalingCenter = InitialPosition;
             Scaling = new Vector3(1f, 1f, 1f);
 
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, vertices);
-            constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            VertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, InitialPoints);
+            ConstantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
             clock.Start();
         }
@@ -87,14 +87,19 @@ namespace SharpDX.Components
             return ret;
         }
 
+        public override void DrawShadow(DeviceContext deviceContext, Matrix shadowTransform, Matrix lightProj, Matrix lightView)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Update()
         {
-            vertices = Transformation(vertices, InitialPosition, Rotation);
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, vertices);
+            InitialPoints = Transformation(InitialPoints, InitialPosition, Rotation);
+            VertexBuffer = Direct3D11.Buffer.Create(Device, Direct3D11.BindFlags.VertexBuffer, InitialPoints);
         }
 
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view)
         {
             var time = clock.ElapsedMilliseconds / 1000f;
 
@@ -103,14 +108,14 @@ namespace SharpDX.Components
             Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
             var worldViewProj = transform * view * proj;
 
-            deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
+            deviceContext.UpdateSubresource(ref worldViewProj, ConstantBuffer, 0);
 
             //float brightness = 1;
-            //deviceContext.UpdateSubresource(ref brightness, constantBuffer, 0);
+            //deviceContext.UpdateSubresource(ref brightness, ConstantBuffer, 0);
 
-            deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
+            deviceContext.VertexShader.SetConstantBuffer(0, ConstantBuffer);
 
-            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vector4>() * 2, 0));
+            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, Utilities.SizeOf<Vector4>() * 2, 0));
 
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
             deviceContext.Draw(36, 0);
@@ -118,8 +123,8 @@ namespace SharpDX.Components
 
         public override void Dispose()
         {
-            vertexBuffer.Dispose();
-            constantBuffer.Dispose();
+            VertexBuffer.Dispose();
+            ConstantBuffer.Dispose();
         }
     }
 }

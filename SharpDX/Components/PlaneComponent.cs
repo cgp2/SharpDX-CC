@@ -1,33 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SharpDX.DXGI;
-using SharpDX.Direct3D11;
+﻿using SharpDX.Direct3D11;
 using SharpDX.Direct3D;
-using SharpDX.D3DCompiler;
-using System.Diagnostics;
-using System.IO;
+
 namespace SharpDX.Components
 {
-    class PlaneComponent : AbstractComponent
+    internal class PlaneComponent : AbstractComponent
     {
-        Texture2D texture;
-        ShaderResourceView textureView;
-        SamplerStateDescription samplerStateDescription;
-        SamplerState sampler;
-        int verticesCount;
-        Materials.AbstractMaterial material;
-        Direct3D11.Buffer matBuf;
-        Direct3D11.Buffer worldBuf;
-        Direct3D11.Buffer viewBuf;
-        Direct3D11.Buffer projBuf;
-        MaterialBufferStruct MaterialBufStruct;
-
-        public PlaneComponent(Direct3D11.Device device, ShaderResourceView text)
+        public PlaneComponent(Device device, ShaderResourceView text)
         {
-            this.device = device;
+            Device = device;
 
             InitialPosition = new Vector3(0f, 0f, 0f);
             RotationCenter = InitialPosition;
@@ -36,7 +16,7 @@ namespace SharpDX.Components
             ScalingCenter = InitialPosition;
             Scaling = new Vector3(1f, 1f, 1f);
 
-            vertices = new Vector4[]
+            InitialPoints = new[]
             {
                 new Vector4(-4.0f, 0.0f, -4.0f,  1.0f), 
                 new Vector4(-4.0f, 0.0f,  4.0f,  1.0f),
@@ -46,7 +26,7 @@ namespace SharpDX.Components
                 new Vector4( 4.0f, 0.0f, -4.0f,  1.0f),
             };
 
-            var textCoords = new Vector2[]
+            var textCoords = new[]
             {
                 new Vector2(0f, 1f), 
                 new Vector2(0f, 0f),
@@ -57,7 +37,7 @@ namespace SharpDX.Components
 
             };
 
-            var normals = new Vector4[]
+            var normals = new[]
             {
                 new Vector4(-4.0f, 1.0f, -4.0f, 0.0f),
                 new Vector4(-4.0f, 1.0f,  4.0f, 0.0f),
@@ -67,43 +47,43 @@ namespace SharpDX.Components
                 new Vector4( 4.0f, 1.0f, -4.0f, 0.0f),
             };
 
-            verticesCount = vertices.Count();
-            t = new VertexPositionNormalTexture[verticesCount];
-            for(int i = 0; i < verticesCount; i++)
+            VerticesCount = InitialPoints.Length;
+            Vertices = new VertexPositionNormalTexture[VerticesCount];
+            for(var i = 0; i < VerticesCount; i++)
             {
-                t[i].Position = vertices[i];
-                t[i].Normal = normals[i];
-                t[i].Texture = textCoords[i];
+                Vertices[i].Position = InitialPoints[i];
+                Vertices[i].Normal = normals[i];
+                Vertices[i].Texture = textCoords[i];
             }
 
-            initialVertices = t;
+            InitialVertices = Vertices;
 
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
+            VertexBuffer = Buffer.Create(device, BindFlags.VertexBuffer, Vertices);
 
-            textureView = text;
+            TextureView = text;
 
-            samplerStateDescription = new SamplerStateDescription
+            SamplerStateDescription = new SamplerStateDescription
             {
                 AddressU = TextureAddressMode.Wrap,
                 AddressV = TextureAddressMode.Wrap,
                 AddressW = TextureAddressMode.Wrap,
                 Filter = Filter.MinMagMipLinear,
             };
-            sampler = new SamplerState(device, samplerStateDescription);;
+            Sampler = new SamplerState(device, SamplerStateDescription);
 
-            material = new Materials.Silver();
+            Material = new Materials.Silver();
 
-            constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            matBuf = new Direct3D11.Buffer(device, Utilities.SizeOf<MaterialBufferStruct>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            worldBuf = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            projBuf = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            viewBuf = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-            MaterialBufStruct = new MaterialBufferStruct();
-            MaterialBufStruct.Absorption = new Vector4(material.Absorption, 0f);
-            MaterialBufStruct.Ambient = new Vector4(material.Ambient, 0f);
-            MaterialBufStruct.Diffuse = new Vector4(material.Diffuse, 0f);
-            MaterialBufStruct.Shiness = material.Shiness;
+            ConstantBuffer = new Buffer(device, Utilities.SizeOf<Matrix>(), ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            MaterialBuf = new Buffer(device, Utilities.SizeOf<MaterialBufferStruct>(), ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            MatricesBuf = new Buffer(device, Utilities.SizeOf<Matrix>() * 4, ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            
+            MaterialBufStruct = new MaterialBufferStruct
+            {
+                Absorption = new Vector4(Material.Absorption, 0f),
+                Ambient = new Vector4(Material.Ambient, 0f),
+                Diffuse = new Vector4(Material.Diffuse, 0f),
+                Shiness = Material.Shiness
+            };
         }
 
         public VertexPositionNormalTexture[] Transformation(VertexPositionNormalTexture[] vertices, Vector3 translation, Matrix rotation)
@@ -112,65 +92,68 @@ namespace SharpDX.Components
 
             var quat = Quaternion.RotationMatrix(Rotation);
 
-            Matrix.AffineTransformation(Scaling.X, ref RotationCenter, ref quat, ref Translation, out transform);
-            WorldPosition = Vector3.Transform(InitialPosition, transform);
-            for (int i = 0; i < vertices.Length; i++)
+            Matrix.AffineTransformation(Scaling.X, ref RotationCenter, ref quat, ref Translation, out Transform);
+            WorldPosition = Vector3.Transform(InitialPosition, Transform);
+            for (var i = 0; i < vertices.Length; i++)
             {
-                ret[i].Position = Vector4.Transform(vertices[i].Position, transform);
-                ret[i].Normal = Vector4.Transform(vertices[i].Normal, transform);
+                ret[i].Position = Vector4.Transform(vertices[i].Position, Transform);
+                ret[i].Normal = Vector4.Transform(vertices[i].Normal, Transform);
                 ret[i].Texture = vertices[i].Texture;
             }
 
             return ret;
         }
 
-        public override void Update()
+        public override void DrawShadow(DeviceContext deviceContext, Matrix shadowTransform, Matrix lightProj, Matrix lightView)
         {
-            initialVertices = t;
-            t = Transformation(t, InitialPosition, Rotation);
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
+            throw new System.NotImplementedException();
         }
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
+        public override void Update()
+        {
+            InitialVertices = Vertices;
+            Vertices = Transformation(Vertices, InitialPosition, Rotation);
+            VertexBuffer = Buffer.Create(Device, BindFlags.VertexBuffer, Vertices);
+        }
+
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view)
         {
             var quat = Quaternion.RotationMatrix(Rotation);
-            Matrix.AffineTransformation(Scaling.X, ref RotationCenter, ref quat, ref Translation, out transform);
+            Matrix.AffineTransformation(Scaling.X, ref RotationCenter, ref quat, ref Translation, out Transform);
 
-            WorldPosition = Vector3.Transform(InitialPosition, transform);
-            var worldViewProj = transform * view * proj; ;
+            WorldPosition = Vector3.Transform(InitialPosition, Transform);
+            var worldViewProj = Transform * view * proj; 
 
-            deviceContext.PixelShader.SetShaderResource(0, textureView);
-            deviceContext.PixelShader.SetSampler(0, sampler);
+            deviceContext.PixelShader.SetShaderResource(0, TextureView);
+            deviceContext.PixelShader.SetSampler(0, Sampler);
             ////Material Buffer
-            //deviceContext.UpdateSubresource(ref MaterialBufStruct, matBuf, 0);
-            //deviceContext.PixelShader.SetConstantBuffer(0, matBuf);
-            //World buffer
-            deviceContext.UpdateSubresource(ref transform, worldBuf, 0);
-            deviceContext.VertexShader.SetConstantBuffer(4, worldBuf);
-            //View Buffer
-            deviceContext.UpdateSubresource(ref view, viewBuf, 0);
-            deviceContext.VertexShader.SetConstantBuffer(5, viewBuf);
-            //Proj Buffer
-            deviceContext.UpdateSubresource(ref proj, projBuf, 0);
-            deviceContext.VertexShader.SetConstantBuffer(6, projBuf);
+            //deviceContext.UpdateSubresource(ref MaterialBufStruct, MaterialBuf, 0);
+            //deviceContext.PixelShader.SetConstantBuffer(0, MaterialBuf);
+            var matrixStruct = new MatrixBufferStruct
+            {
+                World = Transform,
+                View = view,
+                Proj = proj
+            };
 
-            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
+            deviceContext.UpdateSubresource(ref matrixStruct, MatricesBuf);
+            deviceContext.VertexShader.SetConstantBuffer(3, MatricesBuf);
+
+            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
 
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            deviceContext.Draw(verticesCount, 0);
+            deviceContext.Draw(VerticesCount, 0);
         }
 
         public override void Dispose()
         {
-            vertexBuffer.Dispose();
-            sampler.Dispose();
-            texture.Dispose();
-            textureView.Dispose();
-            worldBuf.Dispose();
-            matBuf.Dispose();
-            viewBuf.Dispose();
-            projBuf.Dispose();
-            constantBuffer.Dispose();
+            VertexBuffer.Dispose();
+            Sampler.Dispose();
+            Texture.Dispose();
+            TextureView.Dispose();
+            MatricesBuf.Dispose();
+            MaterialBuf.Dispose();
+            ConstantBuffer.Dispose();
         }
     }
 }

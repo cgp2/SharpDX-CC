@@ -13,18 +13,17 @@ namespace SharpDX.Components
 {
     class CircleComponent : AbstractComponent
     {
-
         private int[] indices;
 
         private Direct3D11.Buffer indexBuffer;
 
-        private int vertexCount = 100;
+        private const int VertexCount = 100;
         public float Diametr = 0.3f;
         public float Radius;
 
         public CircleComponent(Direct3D11.Device device)
         {
-            this.device = device;
+            this.Device = device;
             InitialPosition = new Vector3(0f, 0f, 0f);
             RotationCenter = InitialPosition;
             Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
@@ -33,33 +32,33 @@ namespace SharpDX.Components
             Scaling = new Vector3(1f, 1f, 1f);
 
             Radius = Diametr / 2;
-            indices = new int[vertexCount];
-            vertices = new Vector4[vertexCount*2];
+            indices = new int[VertexCount];
+            InitialPoints = new Vector4[VertexCount*2];
 
-            int s = 0;
-            for (int i = 0; i < vertexCount*2; i += 2)
+            var s = 0;
+            for (var i = 0; i < VertexCount*2; i += 2)
             {
-                float x = (float)(Radius * Math.Cos(i * (2 * Math.PI / vertexCount)));
-                float y = (float)(Radius * Math.Sin(i * (2 * Math.PI / vertexCount)));
-                vertices[i] = new Vector4(x, y, 0f, 1.0f);
-                vertices[i + 1] = Color.Blue.ToVector4();
+                var x = (float)(Radius * Math.Cos(i * (2 * Math.PI / VertexCount)));
+                var y = (float)(Radius * Math.Sin(i * (2 * Math.PI / VertexCount)));
+                InitialPoints[i] = new Vector4(x, y, 0f, 1.0f);
+                InitialPoints[i + 1] = Color.Blue.ToVector4();
                 indices[s] = s;
                 s++;           
             }
 
 
-            GlobalVertices = vertices;
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
+            GlobalVertices = InitialPoints;
+            VertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
 
             indexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, indices);
 
-            constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            ConstantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
         }
 
         public Vector4[] Transformation(Vector4[] vertices, Vector3 translation, Matrix rotation)
         {
-            Vector4[] ret = new Vector4[vertices.Length];
-            Matrix transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), new Vector3(0f, 0f, 0f), Quaternion.RotationMatrix(rotation), translation);
+            var ret = new Vector4[vertices.Length];
+            var transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), new Vector3(0f, 0f, 0f), Quaternion.RotationMatrix(rotation), translation);
 
             for (int i = 0; i < vertices.Length; i += 2)
             {
@@ -70,32 +69,37 @@ namespace SharpDX.Components
             return ret;
         }
 
-        public override void Update()
+        public override void DrawShadow(DeviceContext deviceContext, Matrix shadowTransform, Matrix lightProj, Matrix lightView)
         {
-            GlobalVertices = Transformation(vertices, InitialPosition, Rotation);
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
+            throw new NotImplementedException();
         }
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
+        public override void Update()
         {
-            Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
+            GlobalVertices = Transformation(InitialPoints, InitialPosition, Rotation);
+            VertexBuffer = Direct3D11.Buffer.Create(Device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
+        }
+
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view)
+        {
+            var transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
             var worldViewProj = transform * view * proj;
 
-            deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
-            deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
+            deviceContext.VertexShader.SetConstantBuffer(0, ConstantBuffer);
+            deviceContext.UpdateSubresource(ref worldViewProj, ConstantBuffer, 0);
            
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.PointList;
 
-            deviceContext.InputAssembler.SetVertexBuffers(0, new Direct3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vector4>() * 2, 0));
-            deviceContext.Draw(vertices.Count(), 0);
+            deviceContext.InputAssembler.SetVertexBuffers(0, new Direct3D11.VertexBufferBinding(VertexBuffer, Utilities.SizeOf<Vector4>() * 2, 0));
+            deviceContext.Draw(InitialPoints.Count(), 0);
 
             Translation = new Vector3(0,0,0);
         }
 
         public override void Dispose()
         {
-            vertexBuffer.Dispose();        
-            constantBuffer.Dispose();
+            VertexBuffer.Dispose();        
+            ConstantBuffer.Dispose();
         }
     }
 }

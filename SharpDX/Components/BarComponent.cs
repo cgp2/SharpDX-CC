@@ -13,20 +13,17 @@ namespace SharpDX.Components
 {
     class BarComponent : AbstractComponent
     {
-        public Vector3 rotationCenter = new Vector3(0f, 0f, 0f);
-
         public BarComponent(Direct3D11.Device device)
         {
-            this.device = device;
+            this.Device = device;
             InitialPosition = new Vector3(0f, 0f, 0f);
-            RotationCenter = InitialPosition;
+            base.RotationCenter = InitialPosition;
             Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
             Translation = new Vector3(0f, 0f, 0f);
             ScalingCenter = InitialPosition;
             Scaling = new Vector3(1f, 1f, 1f);
 
-            
-            vertices = new Vector4[]
+            InitialPoints = new Vector4[]
             {
                 //TOP
                 new Vector4(-0.2f, 0.05f, 0.0f, 1.0f), Color.Blue.ToVector4(),
@@ -41,17 +38,17 @@ namespace SharpDX.Components
                 new Vector4(0.2f, 0.0f, 0.0f, 1.0f), Color.Red.ToVector4(),
                 new Vector4(0.2f, 0.05f, 0.0f, 1.0f), Color.Red.ToVector4(),
             };
-            GlobalVertices = vertices;
+            GlobalVertices = InitialPoints;
 
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
-            constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            VertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
+            ConstantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
         }
 
         public Vector4[] Transformation(Vector4[] vertices, Vector3 translation, Matrix rotation)
         {
             Vector4[] ret = new Vector4[vertices.Length];
 
-            Matrix transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), rotationCenter, Quaternion.RotationMatrix(rotation), translation);
+            Matrix transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), RotationCenter, Quaternion.RotationMatrix(rotation), translation);
 
             for (int i = 0; i < vertices.Length; i += 2)
             {
@@ -62,15 +59,15 @@ namespace SharpDX.Components
             return ret;
         }
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view)
         {
-            Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
+            Matrix transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, base.RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
             var worldViewProj = transform * view * proj;
 
-            deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
-            deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
+            deviceContext.UpdateSubresource(ref worldViewProj, ConstantBuffer, 0);
+            deviceContext.VertexShader.SetConstantBuffer(0, ConstantBuffer);
 
-            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vector4>() * 2, 0));
+            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, Utilities.SizeOf<Vector4>() * 2, 0));
 
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.LineList;
 
@@ -79,16 +76,22 @@ namespace SharpDX.Components
             Translation = new Vector3(0f, 0f, 0f);
         }
 
+        public override void DrawShadow(DeviceContext deviceContext, Matrix shadowTransform, Matrix lightProj, Matrix lightView)
+        {
+            throw new NotImplementedException();
+        }
+
+
         public override void Update()
         {
-            GlobalVertices = Transformation(vertices, InitialPosition, Rotation);
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
+            GlobalVertices = Transformation(InitialPoints, InitialPosition, Rotation);
+            VertexBuffer = Direct3D11.Buffer.Create(Device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
         }
 
         public override void Dispose()
         {
-            vertexBuffer.Dispose();
-            constantBuffer.Dispose();
+            VertexBuffer.Dispose();
+            ConstantBuffer.Dispose();
         }
     }
 }

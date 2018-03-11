@@ -81,7 +81,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
     <Compile Include="Components\BarComponent.cs" />
     <Compile Include="Components\BoxComponent.cs" />
     <Compile Include="Components\CameraComponent.cs" />
@@ -90,11 +89,13 @@
     <Compile Include="Components\CubeComponentTextured.cs" />
     <Compile Include="Components\GridComponentTextured.cs" />
     <Compile Include="Components\PlaneComponent.cs" />
+    <Compile Include="Components\SOComponent.cs" />
     <Compile Include="Games\LightingGame.cs" />
     <Compile Include="Games\TexturingGame.cs" />
+    <Compile Include="InputStructures\TrianglePositionNormalTextureInput.cs" />
     <Compile Include="InputStructures\VertexPositionNormalWorldPosTexture.cs" />
     <Compile Include="Lighting\AbstractLight.cs" />
-    <Compile Include="Lighting\SpotLight.cs" />
+    <Compile Include="Lighting\DirectionalLight.cs" />
     <Compile Include="Lighting\PointLight.cs" />
     <Compile Include="Materials\AbstractMaterial.cs" />
     <Compile Include="Materials\BlackPlastic.cs" />
@@ -106,7 +107,6 @@
     <Compile Include="Components\GridComponent.cs" />
     <Compile Include="Components\AbstractComponent.cs" />
     <Compile Include="Components\SphereComponent.cs" />
-    <Compile Include="FileReader.cs" />
     <Compile Include="InputStructures\VertexPositionColorTexture.cs" />
     <Compile Include="Games\PingPong.cs" />
     <Compile Include="InputDevice.cs" />
@@ -136,10 +136,13 @@
     <Content Include="3t.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Shaders\ShadowVolumeGeometryShader.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Shaders\GeometryShader.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shaders\ShadowLightingShaders.hlsl">
+    <Content Include="Shaders\ShadowMapLightingShaders.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Shaders\LightingShaders.hlsl">
@@ -149,6 +152,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Shaders\ShadowMapShaders.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\ShadowVolumeLightingShaders.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Shaders\TextureShaders.hlsl">

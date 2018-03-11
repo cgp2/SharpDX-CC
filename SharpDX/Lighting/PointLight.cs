@@ -18,7 +18,7 @@ namespace SharpDX.Lighting
 {
     class PointLight : AbstractLight
     {
-        public const int SHADOW_CUBE_MAP_SIZE = 2048;
+        public const int ShadowCubeMapSize = 2048;
         public Matrix Projection;
         public Matrix[] View = new Matrix[6];
 
@@ -39,8 +39,8 @@ namespace SharpDX.Lighting
 
             var texDesc = new Texture2DDescription
             {
-                Width = SHADOW_CUBE_MAP_SIZE,
-                Height = SHADOW_CUBE_MAP_SIZE,
+                Width = ShadowCubeMapSize,
+                Height = ShadowCubeMapSize,
                 MipLevels = 1,
                 ArraySize = 6,
                 Format = Format.R24G8_Typeless,

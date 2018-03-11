@@ -19,76 +19,78 @@ namespace SharpDX
 {
     public abstract class Game 
     {
-        public Direct3D11.Device device;
-        public RenderForm renderForm;
+        public Direct3D11.Device GameDevice;
+        public RenderForm RenderForm;
         public CameraComponent Camera;
 
-        public Direct3D11.DeviceContext deviceContext;
-        protected RenderTargetView renderTargetView;
-        protected Direct3D11.VertexShader vertexShader;
-        protected InputDevice inp;
-        protected SwapChain swapChain;
+        public Direct3D11.DeviceContext DeviceContext;
+        protected RenderTargetView RenderTargetView;
+        protected Direct3D11.VertexShader VertexShader;
+        protected InputDevice InputDevice;
+        protected SwapChain SwapChain;
 
-        protected const int width = 800;
-        protected const int height = 800;
+        protected const int Width = 800;
+        protected const int Height = 800;
 
-        protected Direct3D11.Buffer vertexBuffer;
-        protected Direct3D11.PixelShader pixelShader;
-        protected Viewport viewport;
-        protected ShaderSignature inputSignature;
-        protected Direct3D11.InputLayout inputLayoutMain;
+        protected Direct3D11.Buffer VertexBuffer;
+        protected Direct3D11.PixelShader PixelShader;
+        protected Viewport Viewport;
+        protected ShaderSignature InputSignature;
+        protected Direct3D11.InputLayout InputLayoutMain;
 
-        protected Factory factory;
+        protected Factory Factory;
 
-        protected SwapChainDescription swapChainDescriptor;
+        protected SwapChainDescription SwapChainDescriptor;
 
-        private Direct3D11.InputElement[] inputElements = new Direct3D11.InputElement[]
+        private readonly Direct3D11.InputElement[] inputElements = new Direct3D11.InputElement[]
         {
             new Direct3D11.InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0, InputClassification.PerVertexData, 0),
             new Direct3D11.InputElement("COLOR", 0, Format.R32G32B32A32_Float, 12, 0, InputClassification.PerVertexData, 0)
         };
 
-        public bool IsActive { get { return true; } }
+        public bool IsActive => true;
 
-        protected List<Components.AbstractComponent> components = new List<Components.AbstractComponent>();
+        protected List<Components.AbstractComponent> Components = new List<Components.AbstractComponent>();
 
-        public Game()
+        protected Game()
         {
-            renderForm = new RenderForm("Default3D");
-            renderForm.ClientSize = new Size(width, height);
-            renderForm.AllowUserResizing = false;
+            RenderForm = new RenderForm("Default3D")
+            {
+                ClientSize = new Size(Width, Height),
+                AllowUserResizing = false
+            };
             InitializeDeviceResources();
 
-            inp = new InputDevice(this);
+            InputDevice = new InputDevice(this);
         }
 
         protected void InitializeDeviceResources()
         {
-            ModeDescription backBufferDesc = new ModeDescription(width, height, new Rational(60, 1), Format.R8G8B8A8_UNorm);
+            var backBufferDesc = new ModeDescription(Width, Height, new Rational(60, 1), Format.R8G8B8A8_UNorm);
 
-            swapChainDescriptor = new SwapChainDescription()
+            SwapChainDescriptor = new SwapChainDescription()
             {
                 BufferCount = 1,
                 ModeDescription = backBufferDesc,
                 IsWindowed = true,
-                OutputHandle = renderForm.Handle,
+                OutputHandle = RenderForm.Handle,
                 SampleDescription = new SampleDescription(1, 0),
                 SwapEffect = SwapEffect.Discard,
                 Usage = Usage.RenderTargetOutput,
             };
 
-            Direct3D11.Device.CreateWithSwapChain(DriverType.Hardware, Direct3D11.DeviceCreationFlags.None, swapChainDescriptor, out device, out swapChain);
-            deviceContext = device.ImmediateContext;
+            Direct3D11.Device.CreateWithSwapChain(DriverType.Hardware, Direct3D11.DeviceCreationFlags.None, SwapChainDescriptor, out GameDevice, out SwapChain);
+            DeviceContext = GameDevice.ImmediateContext;
 
-            viewport = new Viewport(0, 0, width, height, 0.0f, 1.0f);
-            deviceContext.Rasterizer.SetViewport(viewport);
+            Viewport = new Viewport(0, 0, Width, Height, 0.0f, 1.0f);
+            DeviceContext.Rasterizer.SetViewport(Viewport);
 
-            factory = swapChain.GetParent<Factory>();
+            Factory = SwapChain.GetParent<Factory>();
             //factory.MakeWindowAssociation(renderForm.Handle, WindowAssociationFlags.IgnoreAll);
 
-            using (Direct3D11.Texture2D backBuffer = swapChain.GetBackBuffer<Direct3D11.Texture2D>(0))
+            using (Direct3D11.Texture2D backBuffer = SwapChain.GetBackBuffer<Direct3D11.Texture2D>(0))
             {
-                renderTargetView = new RenderTargetView(device, backBuffer);
+                RenderTargetView = new RenderTargetView(GameDevice, backBuffer);
             }
         }
 
@@ -97,37 +99,45 @@ namespace SharpDX
         { 
             using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile("MiniCube.fx", "VS", "vs_4_0", ShaderFlags.Debug))
             {
-                inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-                vertexShader = new Direct3D11.VertexShader(device, vertexShaderByteCode);
+                InputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
+                VertexShader = new Direct3D11.VertexShader(GameDevice, vertexShaderByteCode);
             }
 
             using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile("MiniCube.fx", "PS", "ps_4_0", ShaderFlags.Debug))
             {
-                pixelShader = new Direct3D11.PixelShader(device, pixelShaderByteCode);
+                PixelShader = new Direct3D11.PixelShader(GameDevice, pixelShaderByteCode);
             }
 
-            deviceContext.VertexShader.Set(vertexShader);
-            deviceContext.PixelShader.Set(pixelShader);
+            DeviceContext.VertexShader.Set(VertexShader);
+            DeviceContext.PixelShader.Set(PixelShader);
 
-            inputLayoutMain = new InputLayout(device, inputSignature, inputElements);
-            deviceContext.InputAssembler.InputLayout = inputLayoutMain;
+            InputLayoutMain = new InputLayout(GameDevice, InputSignature, inputElements);
+            DeviceContext.InputAssembler.InputLayout = InputLayoutMain;
         }
 
         public abstract void KeyPressed(Keys key);
 
         public abstract void MouseMoved(float x, float y);
 
+        protected struct LightBufferStruct
+        {
+            public Vector4 Position;
+            public Vector4 Color;
+            public float Intensity;
+            public float Dum1, Dum2, Dum3;
+        }
+
         public void DisposeBase()
         {
-            renderForm.Dispose();
-            renderTargetView.Dispose();
-            device.Dispose();
-            swapChain.Dispose();
-            deviceContext.Dispose();
-            vertexShader.Dispose();
-            pixelShader.Dispose();
-            inputLayoutMain.Dispose();
-            inputSignature.Dispose();
+            RenderForm.Dispose();
+            RenderTargetView.Dispose();
+            GameDevice.Dispose();
+            SwapChain.Dispose();
+            DeviceContext.Dispose();
+            VertexShader.Dispose();
+            PixelShader.Dispose();
+            InputLayoutMain.Dispose();
+            InputSignature.Dispose();
         }
     }
 }

@@ -57,7 +57,7 @@ namespace SharpDX
 
 		private void Device_MouseInput(object sender, MouseInputEventArgs e)
 		{
-			var p = Game.renderForm.PointToClient(System.Windows.Forms.Cursor.Position);
+			var p = Game.RenderForm.PointToClient(System.Windows.Forms.Cursor.Position);
 
             MousePositionLocal	= new Vector2(p.X, p.Y);
 			MouseOffset			= new Vector2(e.X, e.Y);
@@ -118,7 +118,7 @@ namespace SharpDX
 
         public void SetMouseToCenter()
         {
-            Cursor.Position = new System.Drawing.Point(Game.renderForm.Width / 2, Game.renderForm.Height / 2);
+            Cursor.Position = new System.Drawing.Point(Game.RenderForm.Width / 2, Game.RenderForm.Height / 2);
         }
 
 		public bool IsKeyDown(Keys key, bool ignoreInputMode = true)

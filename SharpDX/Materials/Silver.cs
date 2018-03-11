@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharpDX.Materials
 {
-    class Silver : AbstractMaterial
+    internal class Silver : AbstractMaterial
     {
         public Silver()
         {

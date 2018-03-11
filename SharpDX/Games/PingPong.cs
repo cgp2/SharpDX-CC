@@ -25,9 +25,9 @@ namespace SharpDX.Games
             new Direct3D11.InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0),
             new Direct3D11.InputElement("COLOR", 0, Format.R32G32B32A32_Float, 16, 0)
         };
-        protected Direct3D11.Buffer constantBuffer;
-        protected Texture2D depthBuffer = null;
-        protected DepthStencilView depthView = null;
+        protected Direct3D11.Buffer ConstantBuffer;
+        protected Texture2D DepthBuffer = null;
+        protected DepthStencilView DepthView = null;
 
         BoxComponent box;
 
@@ -45,11 +45,11 @@ namespace SharpDX.Games
         public PingPong()
         {
             InitializeShaders();
-            renderForm.Name = "PingPong";
+            RenderForm.Name = "PingPong";
 
-            Random Rd = new Random();
-            float x = Rd.NextFloat(0.3f, 5f);
-            float y = Rd.NextFloat(1f, 5f);
+            Random rd = new Random();
+            float x = rd.NextFloat(0.3f, 5f);
+            float y = rd.NextFloat(1f, 5f);
 
             circleMovementDirection = new Vector3(x, y, 0f);
         }
@@ -58,35 +58,35 @@ namespace SharpDX.Games
         {
             using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile("MiniCube.fx", "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
             {
-                inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-                vertexShader = new Direct3D11.VertexShader(device, vertexShaderByteCode);
+                InputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
+                VertexShader = new Direct3D11.VertexShader(GameDevice, vertexShaderByteCode);
             }
 
             using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile("MiniCube.fx", "PS", "ps_5_0", ShaderFlags.PackMatrixRowMajor))
             {
-                pixelShader = new Direct3D11.PixelShader(device, pixelShaderByteCode);
+                PixelShader = new Direct3D11.PixelShader(GameDevice, pixelShaderByteCode);
             }
 
-            deviceContext.VertexShader.Set(vertexShader);
-            deviceContext.PixelShader.Set(pixelShader);
+            DeviceContext.VertexShader.Set(VertexShader);
+            DeviceContext.PixelShader.Set(PixelShader);
 
 
-            inputLayoutMain = new InputLayout(device, inputSignature, inputElements);
-            deviceContext.InputAssembler.InputLayout = inputLayoutMain;
+            InputLayoutMain = new InputLayout(GameDevice, InputSignature, inputElements);
+            DeviceContext.InputAssembler.InputLayout = InputLayoutMain;
 
 
-            constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            ConstantBuffer = new Direct3D11.Buffer(GameDevice, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-            backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0);
+            backBuffer = Texture2D.FromSwapChain<Texture2D>(SwapChain, 0);
 
-            renderTargetView = new RenderTargetView(device, backBuffer);
-            depthBuffer = new Texture2D(device, new Texture2DDescription()
+            RenderTargetView = new RenderTargetView(GameDevice, backBuffer);
+            DepthBuffer = new Texture2D(GameDevice, new Texture2DDescription()
             {
                 Format = Format.D32_Float_S8X24_UInt,
                 ArraySize = 1,
                 MipLevels = 1,
-                Width = renderForm.ClientSize.Width,
-                Height = renderForm.ClientSize.Height,
+                Width = RenderForm.ClientSize.Width,
+                Height = RenderForm.ClientSize.Height,
                 SampleDescription = new SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.DepthStencil,
@@ -95,47 +95,47 @@ namespace SharpDX.Games
             });
 
 
-            depthView = new DepthStencilView(device, depthBuffer);
+            DepthView = new DepthStencilView(GameDevice, DepthBuffer);
         }
 
 
         public void Run()
         {
-            deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
+            DeviceContext.VertexShader.SetConstantBuffer(0, ConstantBuffer);
 
-            deviceContext.Rasterizer.SetViewport(new Viewport(0, 0, renderForm.ClientSize.Width, renderForm.ClientSize.Height, 0.0f, 1.0f));
-            deviceContext.OutputMerger.SetTargets(depthView, renderTargetView);
+            DeviceContext.Rasterizer.SetViewport(new Viewport(0, 0, RenderForm.ClientSize.Width, RenderForm.ClientSize.Height, 0.0f, 1.0f));
+            DeviceContext.OutputMerger.SetTargets(DepthView, RenderTargetView);
 
-            box = new BoxComponent(device);
+            box = new BoxComponent(GameDevice);
             boxUpBorder = box.GlobalVertices[0].Y - 0.01f;
             boxBottomBorder = box.GlobalVertices[4].Y + 0.01f;
             boxLeftBorder = box.GlobalVertices[8].X + 0.01f;
             boxRightBorder = box.GlobalVertices[12].X - 0.01f;
 
-            barBottom = new BarComponent(device);
+            barBottom = new BarComponent(GameDevice);
             barBottom.InitialPosition = new Vector3(0f, 0.1f, 0f);
             barBottom.Update();
 
-            barTop = new BarComponent(device);
+            barTop = new BarComponent(GameDevice);
             barTop.Rotation = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(0), MathUtil.DegreesToRadians(0), MathUtil.DegreesToRadians(180));
             barTop.InitialPosition = new Vector3(0f, 3.9f, 0f);
             barTop.Update();
 
-            crcl1 = new CircleComponent(device);
+            crcl1 = new CircleComponent(GameDevice);
             crcl1.InitialPosition = new Vector3(0f, 2f, 0f);
             //crcl1.Translation = Matrix.Translation(crcl1.WorldPosition);
             crcl1.Update();
 
 
             clock.Start();
-            RenderLoop.Run(renderForm, RenderCallback);
+            RenderLoop.Run(RenderForm, RenderCallback);
         }
 
         private void RenderCallback()
         {
             var viewProj = Matrix.Multiply(Camera.View, Camera.Proj);
             var worldViewProj = viewProj;
-            deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer);
+            DeviceContext.UpdateSubresource(ref worldViewProj, ConstantBuffer);
 
             Draw();
         }
@@ -148,21 +148,21 @@ namespace SharpDX.Games
             {
                 var time = clock.ElapsedMilliseconds;
                 while (time + 1000 > clock.ElapsedMilliseconds) { }
-                Random Rd = new Random();
-                float x = Rd.NextFloat(0.3f, 5f);
-                float y = Rd.NextFloat(1f, 5f);
+                Random rd = new Random();
+                float x = rd.NextFloat(0.3f, 5f);
+                float y = rd.NextFloat(1f, 5f);
 
                 circleMovementDirection = new Vector3(x, y, 0f);
 
                 isGoalHit = false;
             }
 
-            deviceContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0f, 0);
-            deviceContext.ClearRenderTargetView(renderTargetView, Color.Black);
+            DeviceContext.ClearDepthStencilView(DepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
+            DeviceContext.ClearRenderTargetView(RenderTargetView, Color.Black);
 
-            box.Draw(deviceContext, Camera.Proj, Camera.View, true);
-            barBottom.Draw(deviceContext, Camera.Proj, Camera.View, true);
-            barTop.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            box.Draw(DeviceContext, Camera.Proj, Camera.View);
+            barBottom.Draw(DeviceContext, Camera.Proj, Camera.View);
+            barTop.Draw(DeviceContext, Camera.Proj, Camera.View);
 
             CheckCircleOverlap();
             ChechDirection();
@@ -171,9 +171,9 @@ namespace SharpDX.Games
 
             crcl1.Translation = crcl1.InitialPosition - new Vector3(0,2,0);
             //crcl1.Translation = Matrix.Translation(crcl1.WorldPosition);         
-            crcl1.Draw(deviceContext, Camera.Proj, Camera.View, true);
+            crcl1.Draw(DeviceContext, Camera.Proj, Camera.View);
 
-            swapChain.Present(1, PresentFlags.None);
+            SwapChain.Present(1, PresentFlags.None);
         }
 
         private void ChechDirection()
@@ -297,9 +297,9 @@ namespace SharpDX.Games
         public void Dispose()
         {
             DisposeBase();
-            constantBuffer.Dispose();
-            depthBuffer.Dispose();
-            depthView.Dispose();
+            ConstantBuffer.Dispose();
+            DepthBuffer.Dispose();
+            DepthView.Dispose();
         }
 
         public override void MouseMoved(float x, float y)

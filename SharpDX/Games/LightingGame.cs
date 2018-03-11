@@ -1,184 +1,94 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SharpDX.Windows;
-using System.Drawing;
-using SharpDX.DXGI;
-using SharpDX.Direct3D11;
-using SharpDX.Direct3D;
-using SharpDX.D3DCompiler;
-using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
 using SharpDX.Components;
-using System.IO;
-
+using SharpDX.D3DCompiler;
+using SharpDX.Direct3D11;
+using SharpDX.DXGI;
+using SharpDX.Lighting;
+using SharpDX.Windows;
+using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace SharpDX.Games
 {
-    class LightingGame : Game, IDisposable
+    internal class LightingGame : Game, IDisposable
     {
         private const int SMapSize = 2048;
-        ShadowMap shadowMap;
 
-        private Stopwatch clock = new Stopwatch();
-        private Direct3D11.InputElement[] inputElements = new Direct3D11.InputElement[]
+        private readonly InputElement[] inputElements =
         {
             new InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0),
             new InputElement("NORMAL", 0, Format.R32G32B32A32_Float, 16, 0),
-            new InputElement("TEXCOORD", 0, Format.R32G32_Float, 32, 0),
+            new InputElement("TEXCOORD", 0, Format.R32G32_Float, 32, 0)
         };
 
-        private InputElement[] soInputElement = new Direct3D11.InputElement[]
-        {
-            new InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0),
-            new InputElement("NORMAL", 0, Format.R32G32B32A32_Float, 16, 0),
-            new InputElement("TEXCOORD", 0, Format.R32G32_Float, 32, 0),
-        };
+        private readonly ShadowMap shadowMap;
+        private ObjModelComponent cow;
+        private CubeComponentTextured cube;
 
-        private Direct3D11.InputElement[] colorInputElements = new Direct3D11.InputElement[]
-        {
-            new Direct3D11.InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0),
-            new Direct3D11.InputElement("COLOR", 0, Format.R32G32B32A32_Float, 16, 0)
-        };
+        private Texture2D depthBuffer;
+        private DepthStencilView depthView;
 
-        protected Texture2D depthBuffer;
-        protected DepthStencilView depthView;
+        private GridComponentTextured grid;
+        private Buffer lightBuf;
+        private LightBufferStruct lightBufferStruct;
+        private PlaneComponent plane;
 
-        Direct3D11.Buffer EyeBuf;
-        Direct3D11.Buffer LightBuf;
-        Direct3D11.Buffer ShdMapBufView;
-        Direct3D11.Buffer ShdMapBufProj;
-        Direct3D11.Buffer SOBuffer;
+        private ShaderResourceView shadowMapResourseView;
+        private SoComponent soComp;
 
-        //GridComponent grid;
-        GridComponentTextured grid;
-        ObjModelComponent cow;
-        PlaneComponent plane;
+        private DirectionalLight directionalLight;
 
-        Lighting.SpotLight SpotLight;
-
-        ShaderResourceView ShadowMapResourseView;
-        LightBufferStruct lightBufferStruct;
-
-        GeometryShader GeometryShader;
-        VertexShader vertexShaderSO;
-        ShaderSignature soInputSignature;
-        InputLayout soInputLayout;
-
-        PixelShader colorPixelShader;
-        VertexShader colorVertexShader;
-        ShaderSignature colorInputSignature;
-        InputLayout colorInputLayout;
-
-        Direct3D11.Buffer constantBufferColor;
+        private Buffer eyeBuf;
 
         public LightingGame()
         {
             InitializeShaders();
             InitializeBuffers();
 
-            Camera = new CameraComponent((float)renderForm.Width / renderForm.Height, new Vector3(0, 7, -12), 180, 0);
+            Camera = new CameraComponent((float) RenderForm.Width / RenderForm.Height, new Vector3(0, 7, -12), 180, 0);
 
-            shadowMap = new ShadowMap(device, swapChain, SMapSize, SMapSize);
+            shadowMap = new ShadowMap(GameDevice, SwapChain, SMapSize, SMapSize);
         }
 
-        new protected void InitializeShaders()
+        protected new void InitializeShaders()
         {
-            var location = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            var path = Path.GetDirectoryName(location).ToString() + "\\Shaders\\ShadowLightingShaders.hlsl";
+            var location = Assembly.GetExecutingAssembly().Location;
+            var path = Path.GetDirectoryName(location) + "\\Shaders\\ShadowMapLightingShaders.hlsl";
             using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(path, "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
             {
-                inputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-                vertexShader = new Direct3D11.VertexShader(device, vertexShaderByteCode);
+                InputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
+                VertexShader = new VertexShader(GameDevice, vertexShaderByteCode);
             }
 
             using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(path, "PS", "ps_5_0", ShaderFlags.PackMatrixRowMajor))
             {
-                pixelShader = new Direct3D11.PixelShader(device, pixelShaderByteCode);
+                PixelShader = new PixelShader(GameDevice, pixelShaderByteCode);
             }
 
-            path = Path.GetDirectoryName(location).ToString() + "\\Shaders\\MiniCube.fx";
-            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(path, "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
-            {
-                colorInputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-                colorVertexShader = new Direct3D11.VertexShader(device, vertexShaderByteCode);
-            }
+            InputLayoutMain = new InputLayout(GameDevice, InputSignature, inputElements);
 
-            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(path, "PS", "ps_5_0", ShaderFlags.PackMatrixRowMajor))
-            {
-                colorPixelShader = new Direct3D11.PixelShader(device, pixelShaderByteCode);
-            }
-
-            path = Path.GetDirectoryName(location).ToString() + "\\Shaders\\GeometryShader.hlsl";
-            using (var geometryShaderByteCode = ShaderBytecode.CompileFromFile(path, "GS", "gs_5_0", ShaderFlags.PackMatrixRowMajor))
-            {
-                StreamOutputElement[] streamOutput = new StreamOutputElement[]
-                {
-                    new StreamOutputElement
-                    {
-                        SemanticName = "POSITION",
-                        SemanticIndex = 0,
-                        StartComponent = 0,
-                        ComponentCount = 4,
-                        OutputSlot = 0,
-                    },
-
-                     new StreamOutputElement
-                    {
-                        SemanticName = "COLOR",
-                        SemanticIndex = 0,
-                        StartComponent = 0,
-                        ComponentCount = 4,
-                        OutputSlot = 0,
-                    },
-                };
-
-                int[] bufferStride = new int[]
-                    {
-                        Utilities.SizeOf<Vector4>() + Utilities.SizeOf<Color4>(),
-                    };
-
-                GeometryShader = new Direct3D11.GeometryShader(device, geometryShaderByteCode, streamOutput, bufferStride, -1);
-            }
-
-            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(path, "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
-            {
-                soInputSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-                vertexShaderSO = new Direct3D11.VertexShader(device, vertexShaderByteCode);
-            }
-
-            colorInputLayout = new InputLayout(device, colorInputSignature, colorInputElements);
-            soInputLayout = new InputLayout(device, soInputSignature, soInputElement);
-            inputLayoutMain = new InputLayout(device, inputSignature, inputElements);
+            var rasterizerStateDesc = RasterizerStateDescription.Default();
+            rasterizerStateDesc.IsScissorEnabled = false;
+            var rasterizerState = new RasterizerState(GameDevice, rasterizerStateDesc);
+            DeviceContext.Rasterizer.State = rasterizerState;
+            DeviceContext.Rasterizer.SetScissorRectangle(0, 100, Width, Height - 100);
         }
 
         protected void InitializeBuffers()
         {
-            EyeBuf = new Direct3D11.Buffer(device, Utilities.SizeOf<Vector4>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            LightBuf = new Direct3D11.Buffer(device, Utilities.SizeOf<LightBufferStruct>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            ShdMapBufView = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            ShdMapBufProj = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            constantBufferColor = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            eyeBuf = new Buffer(GameDevice, Utilities.SizeOf<Vector4>(), ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            lightBuf = new Buffer(GameDevice, Utilities.SizeOf<LightBufferStruct>(), ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-            SOBuffer = new Direct3D11.Buffer(device, new BufferDescription
+            depthBuffer = new Texture2D(GameDevice, new Texture2DDescription
             {
-                BindFlags = BindFlags.VertexBuffer | BindFlags.StreamOutput,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
-                Usage = ResourceUsage.Default,
-                StructureByteStride = Utilities.SizeOf<VertexPositionColor>(),
-                SizeInBytes = Utilities.SizeOf<VertexPositionColor>() * 100000,
-            });
-
-            depthBuffer = new Texture2D(device, new Texture2DDescription()
-            {
+                //Format = Format.R32G8X24_Typeless,
                 Format = Format.D32_Float_S8X24_UInt,
                 ArraySize = 1,
                 MipLevels = 1,
-                Width = renderForm.ClientSize.Width,
-                Height = renderForm.ClientSize.Height,
+                Width = RenderForm.ClientSize.Width,
+                Height = RenderForm.ClientSize.Height,
                 SampleDescription = new SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.DepthStencil,
@@ -186,70 +96,108 @@ namespace SharpDX.Games
                 OptionFlags = ResourceOptionFlags.None
             });
 
-            depthView = new DepthStencilView(device, depthBuffer);
+            depthView = new DepthStencilView(GameDevice, depthBuffer);
+
+            var dssd = DepthStencilStateDescription.Default();
+            //dssd.IsDepthEnabled = true;
+            //dssd.IsStencilEnabled = true;
+            //dssd.DepthWriteMask = DepthWriteMask.All;
+            //dssd.DepthComparison = Comparison.Less;
+            //dssd.FrontFace = new DepthStencilOperationDescription
+            //{
+            //    Comparison = Comparison.Equal,
+            //    DepthFailOperation = StencilOperation.Keep,
+            //    FailOperation = StencilOperation.Keep,
+            //    PassOperation = StencilOperation.Keep
+            //};
+            //dssd.BackFace = new DepthStencilOperationDescription
+            //{
+            //    Comparison = Comparison.Equal,
+            //    DepthFailOperation = StencilOperation.Increment,
+            //    FailOperation = StencilOperation.Increment,
+            //    PassOperation = StencilOperation.Keep
+            //};
+
+            var dss = new DepthStencilState(GameDevice, dssd);
+            DeviceContext.OutputMerger.SetDepthStencilState(dss);
+
+            //DSVText = new Texture2D(GameDevice, new Texture2DDescription()
+            //{
+            //    Format = Format.D32_Float_S8X24_UInt,
+            //    ArraySize = 1,
+            //    MipLevels = 1,
+            //    Width = width,
+            //    Height = height,
+            //    SampleDescription = new SampleDescription(1, 0),
+            //    Usage = ResourceUsage.Default,
+            //    BindFlags = BindFlags.DepthStencil,
+            //    CpuAccessFlags = CpuAccessFlags.None,
+            //    OptionFlags = ResourceOptionFlags.None
+            //});
+
+            //// Create the depth buffer view
+            //depthMapDSV = new DepthStencilView(GameDevice, DSVText);
         }
 
         public void Run()
         {
-            //grid = new GridComponent(device);
-            grid = new GridComponentTextured(device, 20, "photo-1491592558635-f4cc68beb2e9.jpg");
-            grid.Translation = new Vector3(-grid.Lenght / 4, 0f, -grid.Lenght / 4);
+            //grid = new GridComponent(GameDevice);
+            grid = new GridComponentTextured(GameDevice, 20, "photo-1491592558635-f4cc68beb2e9.jpg");
+            grid.Translation = new Vector3(-grid.Lenght / 4f, 0f, -grid.Lenght / 4f);
             //grid.Translation = new Vector3(0, 0f, -5);
             grid.Update();
 
-            var location = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            var path = Path.GetDirectoryName(location).ToString() + "\\Cow.obj";
-            cow = new ObjModelComponent(device, path, "bright_silver_foil_cardstock-1_5fd8774c-ce46-414b-b323-2be87c8a37a7_1000x.jpg");
-            cow.Translation = new Vector3(0f, 0f, 0f);
-            cow.Scaling = new Vector3(0.1f, 0.1f, 0.1f);
+            var location = Assembly.GetExecutingAssembly().Location;
+            var path = Path.GetDirectoryName(location) + "\\Cow.obj";
+            cow = new ObjModelComponent(GameDevice, path, "bright_silver_foil_cardstock-1_5fd8774c-ce46-414b-b323-2be87c8a37a7_1000x.jpg")
+            {
+                Translation = new Vector3(0f, 0f, 0f),
+                Scaling = new Vector3(0.1f, 0.1f, 0.1f)
+            };
             cow.Update();
 
-            //location = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            //path = Path.GetDirectoryName(location).ToString() + "\\Toilet.obj";
-            //cobbl = new ObjModelComponent(device, path, "bright_silver_foil_cardstock-1_5fd8774c-ce46-414b-b323-2be87c8a37a7_1000x.jpg");
-            //cobbl.Translation = new Vector3(-7f, 7f, -3f);
-            //cobbl.Scaling = new Vector3(0.3f, 0.3f, 0.3f);
-            //cobbl.Update();
-
             //PointLight = new Lighting.PointLight(new Vector4(0f, 5f, 90f, 1f), Color.LightPink, 2f);
-            SpotLight = new Lighting.SpotLight(new Vector4(100f, 10f, 0f, 0f), -90, -30, 5, 90, Color.White, 2f);
+            directionalLight = new DirectionalLight(new Vector4(200f, 25f, 0f, 1f), 50, 50, Color.White, 5f);
 
-            lightBufferStruct = new LightBufferStruct();
-            lightBufferStruct.Position = new Vector4(0f, 1f, 0f, 0f);
-            lightBufferStruct.Color = SpotLight.Color;
-            lightBufferStruct.Intensity = SpotLight.Intensity;
+            lightBufferStruct = new LightBufferStruct
+            {
+                //Ask Why
+                Position = new Vector4(0f, 1f, 0f, 0f),
+                Color = directionalLight.Color,
+                Intensity = directionalLight.Intensity
+            };
 
-            plane = new PlaneComponent(device, ShadowMapResourseView);
-            plane.Translation = new Vector3(-5f, 5f, 5f);
-            plane.Rotation = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(0), MathUtil.DegreesToRadians(-45), MathUtil.DegreesToRadians(0));
+            cube = new CubeComponentTextured(GameDevice, "bright_silver_foil_cardstock-1_5fd8774c-ce46-414b-b323-2be87c8a37a7_1000x.jpg")
+            {
+                InitialPosition = new Vector3(5f, 4f, 2f)
+            };
+            cube.Update();
+
+            DrawShadowMap();
+
+            plane = new PlaneComponent(GameDevice, shadowMapResourseView)
+            {
+                Translation = new Vector3(-5f, 5f, 5f),
+                Rotation = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(0), MathUtil.DegreesToRadians(-45),
+                    MathUtil.DegreesToRadians(0))
+            };
             plane.Update();
 
-            RenderLoop.Run(renderForm, RenderCallback);
+            soComp = new SoComponent(GameDevice, cow.Vertices);
+
+            RenderLoop.Run(RenderForm, RenderCallback);
         }
 
         private void RenderCallback()
         {
-            //deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
-
             Draw();
         }
 
         public void Draw()
         {
-            //Draw to StreamOutput buffer
-            deviceContext.StreamOutput.SetTarget(SOBuffer, 0);
-
-            deviceContext.VertexShader.Set(vertexShaderSO);
-            deviceContext.PixelShader.Set(null);
-            deviceContext.GeometryShader.Set(GeometryShader);
-            deviceContext.InputAssembler.InputLayout = soInputLayout;
-
-            cow.Draw(deviceContext, Camera.Proj, Camera.View, true);
-
-            deviceContext.StreamOutput.SetTargets(null);
-
+            soComp.DrawSo(DeviceContext);
             //Draw Shadow Map
-            DrawShadowMap();
+
             var samplerStateDescription = new SamplerStateDescription
             {
                 AddressU = TextureAddressMode.Border,
@@ -258,81 +206,58 @@ namespace SharpDX.Games
                 Filter = Filter.ComparisonMinMagMipLinear,
                 BorderColor = Color.Zero,
                 ComparisonFunction = Comparison.Less
-
             };
-            var shadowMapSampler = new SamplerState(device, samplerStateDescription);          
+            var shadowMapSampler = new SamplerState(GameDevice, samplerStateDescription);
 
             //Draw main components
             BindComponents();
 
-            deviceContext.PixelShader.SetSampler(1, shadowMapSampler);
+            DeviceContext.PixelShader.SetSampler(1, shadowMapSampler);
 
-            deviceContext.VertexShader.Set(vertexShader);
-            deviceContext.PixelShader.Set(pixelShader);
-            deviceContext.GeometryShader.Set(null);
-            deviceContext.InputAssembler.InputLayout = inputLayoutMain;
+            DeviceContext.VertexShader.Set(VertexShader);
+            DeviceContext.PixelShader.Set(PixelShader);
+            DeviceContext.GeometryShader.Set(null);
 
-            deviceContext.PixelShader.SetShaderResource(1, ShadowMapResourseView);
+            DeviceContext.PixelShader.SetShaderResource(1, shadowMapResourseView);
 
             var eyepos = new Vector4(Camera.EyePosition.X, Camera.EyePosition.Y, Camera.EyePosition.Z, 1f);
 
-            deviceContext.UpdateSubresource(ref eyepos, EyeBuf, 0);
-            deviceContext.PixelShader.SetConstantBuffer(1, EyeBuf);
+            DeviceContext.UpdateSubresource(ref eyepos, eyeBuf);
+            DeviceContext.PixelShader.SetConstantBuffer(1, eyeBuf);
 
-            deviceContext.UpdateSubresource(ref lightBufferStruct, LightBuf, 0);
-            deviceContext.PixelShader.SetConstantBuffer(2, LightBuf);
+            DeviceContext.UpdateSubresource(ref lightBufferStruct, lightBuf);
+            DeviceContext.PixelShader.SetConstantBuffer(2, lightBuf);
 
-            deviceContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0f, 0);
-            deviceContext.ClearRenderTargetView(renderTargetView, Color.Black);
+            DeviceContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0f, 0);
+            DeviceContext.ClearRenderTargetView(RenderTargetView, Color.Black);
 
-            plane.Draw(deviceContext, Camera.Proj, Camera.View, false);
-            grid.Draw(deviceContext, Camera.Proj, Camera.View, false);
+            plane.Draw(DeviceContext, Camera.Proj, Camera.View);
+            grid.Draw(DeviceContext, Camera.Proj, Camera.View);
 
-            cow.Draw(deviceContext, Camera.Proj, Camera.View, false);
+            cow.Draw(DeviceContext, Camera.Proj, Camera.View);
 
-            //Draw From StreamOutput buffer
-            deviceContext.VertexShader.Set(colorVertexShader);
-            deviceContext.PixelShader.Set(colorPixelShader);
-            deviceContext.InputAssembler.InputLayout = colorInputLayout;
+            soComp.DrawPs(DeviceContext, Camera.View, Camera.Proj, Matrix.AffineTransformation(1f, Quaternion.RotationMatrix(cow.Rotation), cow.Translation));
 
-            var viewProj = cow.transform * Camera.View  * Camera.Proj;
-            deviceContext.UpdateSubresource(ref viewProj, constantBufferColor, 0);
-            deviceContext.VertexShader.SetConstantBuffer(0, constantBufferColor);
-
-            deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleListWithAdjacency;
-            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(SOBuffer, Utilities.SizeOf<VertexPositionColor>(), 0));
-
-            deviceContext.DrawAuto();
-
-            swapChain.Present(1, PresentFlags.None);
+            SwapChain.Present(1, PresentFlags.None);
         }
 
         public void DrawShadowMap()
         {
-            shadowMap.BindComponents(deviceContext);
+            shadowMap.BindComponents(DeviceContext);
 
-            deviceContext.UpdateSubresource(ref SpotLight.View, ShdMapBufView, 0);
-            deviceContext.VertexShader.SetConstantBuffer(0, ShdMapBufView);
+            grid.DrawShadow(DeviceContext, directionalLight.ShadowTransform, directionalLight.Projection, directionalLight.View);
+            cow.DrawShadow(DeviceContext, directionalLight.ShadowTransform, directionalLight.Projection, directionalLight.View);
+            // cobbl.DrawShadow(deviceContext, DirectionalLight.View, DirectionalLight.Projection);
 
-            deviceContext.UpdateSubresource(ref SpotLight.Projection, ShdMapBufProj, 0);
-            deviceContext.VertexShader.SetConstantBuffer(1, ShdMapBufProj);
-
-            grid.DrawShadow(deviceContext, SpotLight.ShadowTransform);
-            cow.DrawShadow(deviceContext, SpotLight.ShadowTransform);
-            // cobbl.DrawShadow(deviceContext, SpotLight.View, SpotLight.Projection);
-
-            ShadowMapResourseView = new ShaderResourceView(device, shadowMap.depthMap);
+            shadowMapResourseView = new ShaderResourceView(GameDevice, shadowMap.DepthMap);
         }
 
         public void BindComponents()
         {
-            deviceContext.VertexShader.Set(vertexShader);
-            deviceContext.PixelShader.Set(pixelShader);
+            DeviceContext.Rasterizer.SetViewport(Viewport);
+            DeviceContext.OutputMerger.SetTargets(depthView, RenderTargetView);
 
-            deviceContext.Rasterizer.SetViewport(viewport);
-            deviceContext.OutputMerger.SetTargets(depthView, renderTargetView);
-
-            deviceContext.InputAssembler.InputLayout = inputLayoutMain;
+            DeviceContext.InputAssembler.InputLayout = InputLayoutMain;
         }
 
         public override void KeyPressed(Keys key)
@@ -357,31 +282,20 @@ namespace SharpDX.Games
             }
         }
 
-        public override void MouseMoved(float x, float y)
-        {
-            Camera.ChangeTargetPosition(x, y);
-        }
-
         public void Dispose()
         {
-            foreach (AbstractComponent comp in components)
+            foreach (var comp in Components)
                 comp.Dispose();
             DisposeBase();
-            EyeBuf.Dispose();
-            LightBuf.Dispose();
-            ShdMapBufView.Dispose();
-            ShdMapBufProj.Dispose();
+            eyeBuf.Dispose();
+            lightBuf.Dispose();
             depthBuffer.Dispose();
             depthView.Dispose();
         }
 
-        struct LightBufferStruct
+        public override void MouseMoved(float x, float y)
         {
-            public Vector4 Position;
-            public Vector4 Color;
-            public float Intensity;
-            public float dum1, dum2, dum3;
+            Camera.ChangeTargetPosition(x, y);
         }
     }
 }
-

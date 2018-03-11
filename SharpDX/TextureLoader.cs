@@ -50,7 +50,7 @@ namespace SharpDX
         /// <summary>
         /// Creates a <see cref="SharpDX.Direct3D11.Texture2D"/> from a WIC <see cref="SharpDX.WIC.BitmapSource"/>
         /// </summary>
-        /// <param name="device">The Direct3D11 device</param>
+        /// <param name="device">The Direct3D11 GameDevice</param>
         /// <param name="bitmapSource">The WIC bitmap source</param>
         /// <returns>A Texture2D</returns>
         public static SharpDX.Direct3D11.Texture2D CreateTexture2DFromBitmap(SharpDX.Direct3D11.Device device, SharpDX.WIC.BitmapSource bitmapSource)

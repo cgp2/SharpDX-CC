@@ -15,9 +15,9 @@ namespace SharpDX.Components
     {
         public BoxComponent(Direct3D11.Device device)
         {
-            this.device = device;
+            this.Device = device;
 
-            vertices = new Vector4[]
+            InitialPoints = new Vector4[]
             {
                     //TOP
                     new Vector4(-1.0f, 4.0f, 0.0f, 1.0f), Color4.White.ToVector4(),
@@ -40,10 +40,10 @@ namespace SharpDX.Components
             ScalingCenter = InitialPosition;
             Scaling = new Vector3(1f, 1f, 1f);
 
-            GlobalVertices = vertices;
+            GlobalVertices = InitialPoints;
 
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
-            constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            VertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
+            ConstantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
         }
 
         public Vector4[] Transformation(Vector4[] vertices, Vector3 translation, Matrix rotation)
@@ -60,16 +60,21 @@ namespace SharpDX.Components
             return ret;
         }
 
+        public override void DrawShadow(DeviceContext deviceContext, Matrix shadowTransform, Matrix lightProj, Matrix lightView)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Update()
         {
-            GlobalVertices = Transformation(vertices, InitialPosition, Rotation);
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
+            GlobalVertices = Transformation(InitialPoints, InitialPosition, Rotation);
+            VertexBuffer = Direct3D11.Buffer.Create(Device, Direct3D11.BindFlags.VertexBuffer, GlobalVertices);
         }
 
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view)
         {
-            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vector4>() * 2, 0));
+            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, Utilities.SizeOf<Vector4>() * 2, 0));
 
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.LineList;
 
@@ -78,8 +83,8 @@ namespace SharpDX.Components
 
         public override void Dispose()
         {
-            vertexBuffer.Dispose();
-            constantBuffer.Dispose();
+            VertexBuffer.Dispose();
+            ConstantBuffer.Dispose();
         }
     }
 }

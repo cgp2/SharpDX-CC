@@ -25,9 +25,9 @@ namespace SharpDX.Games
 
         public TriangleGame()
         {
-            renderForm = new RenderForm();
-            renderForm.ClientSize = new Size(width, height);
-            renderForm.AllowUserResizing = false;
+            RenderForm = new RenderForm();
+            RenderForm.ClientSize = new Size(Width, Height);
+            RenderForm.AllowUserResizing = false;
 
             InitializeDeviceResources();
             InitializeShaders();
@@ -36,13 +36,13 @@ namespace SharpDX.Games
 
         private void InitializeTriangle()
         {
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, vertices);
+            VertexBuffer = Direct3D11.Buffer.Create(GameDevice, Direct3D11.BindFlags.VertexBuffer, vertices);
         }
 
 
         public void Run()
         {
-            RenderLoop.Run(renderForm, RenderCallback);
+            RenderLoop.Run(RenderForm, RenderCallback);
         }
 
         private void RenderCallback()
@@ -52,15 +52,15 @@ namespace SharpDX.Games
 
         public void Draw()
         {
-            deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+            DeviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
-            deviceContext.OutputMerger.SetRenderTargets(renderTargetView);
-            deviceContext.ClearRenderTargetView(renderTargetView, Color.Black);
+            DeviceContext.OutputMerger.SetRenderTargets(RenderTargetView);
+            DeviceContext.ClearRenderTargetView(RenderTargetView, Color.Black);
 
-            deviceContext.InputAssembler.SetVertexBuffers(0, new Direct3D11.VertexBufferBinding(vertexBuffer, Utilities.SizeOf<VertexPositionColor>(), 0));
-            deviceContext.Draw(vertices.Count(), 0);
+            DeviceContext.InputAssembler.SetVertexBuffers(0, new Direct3D11.VertexBufferBinding(VertexBuffer, Utilities.SizeOf<VertexPositionColor>(), 0));
+            DeviceContext.Draw(vertices.Count(), 0);
 
-            swapChain.Present(1, PresentFlags.None);
+            SwapChain.Present(1, PresentFlags.None);
         }
 
         public override void KeyPressed(Keys key)

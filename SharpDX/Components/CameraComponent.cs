@@ -12,7 +12,7 @@ namespace SharpDX
     {
         public Matrix View, Proj, RotMatrix;
         public Vector3 EyePosition, TargetPosition, UpVector;
-        public float FOV, aspect;
+        public float Fov, Aspect;
 
         private float yaw = 0, pitch = 0;
 
@@ -26,7 +26,7 @@ namespace SharpDX
             EyePosition = pos;
             TargetPosition = RotMatrix.Forward + EyePosition;
             UpVector = RotMatrix.Up;
-            this.aspect = aspect;
+            this.Aspect = aspect;
 
             UpdateViewMatrix();
             Proj = Matrix.PerspectiveFovLH((float)Math.PI / 2.0f, aspect, 0.1f, 1000.0f);

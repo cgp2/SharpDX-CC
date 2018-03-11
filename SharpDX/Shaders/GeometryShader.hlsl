@@ -30,8 +30,8 @@ void GS(point GS_IN input[1], inout TriangleStream<GS_IN> stream)
 	GS_IN p1 = p;
 	GS_IN p2 = p;
 
-	p1.pos += float4(10, 0, 0, 0);
-	p2.pos += float4(0, 10, 0, 0);
+	p1.pos += float4(2, 0, 0, 0);
+	p2.pos += float4(0, 2, 0, 0);
 
 	stream.Append(p0);
 	stream.Append(p1);

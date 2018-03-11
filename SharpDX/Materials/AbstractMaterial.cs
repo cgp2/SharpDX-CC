@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharpDX.Materials
 {
-    abstract class AbstractMaterial
+    public abstract class AbstractMaterial
     {
         public Vector3 Diffuse;
         public Vector3 Absorption;

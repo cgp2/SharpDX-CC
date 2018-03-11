@@ -1,108 +1,124 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SharpDX.DXGI;
-using SharpDX.Direct3D11;
+﻿using System.Collections.Generic;
 using SharpDX.Direct3D;
-using SharpDX.D3DCompiler;
-using System.Diagnostics;
-using System.IO;
-
+using SharpDX.Direct3D11;
+using SharpDX.InputStructures;
+using SharpDX.Materials;
+using SharpDX.WIC;
 
 namespace SharpDX.Components
 {
-    class ObjModelComponent : AbstractComponent
+    internal class ObjModelComponent : AbstractComponent
     {
-        Texture2D texture;
-        ShaderResourceView textureView;
-        SamplerStateDescription samplerStateDescription;
-        SamplerState sampler;
-        int verticesCount;
-        Materials.AbstractMaterial material;
-        Direct3D11.Buffer matBuf;
-        Direct3D11.Buffer worldBuf;
-        Direct3D11.Buffer viewBuf ;
-        Direct3D11.Buffer projBuf;
-        MaterialBufferStruct MaterialBufStruct;
+        private TrianglePositionNormalTextureStripInput[] inputShadowVolume;
 
-        Direct3D11.Buffer shadowWorldBuffer;
-        Direct3D11.Buffer shadowTransformBuffer;
-
-        Matrix shadowTransform;
-
-        Direct3D11.Buffer bufferForSO;
-
-        public ObjModelComponent(Direct3D11.Device device, string objFilePath, string texturePath)
+        public ObjModelComponent(Device device, string objFilePath, string texturePath)
         {
-            this.device = device;
+            Device = device;
 
-            InitialPosition = new Vector3(0f, 0f, 0f);
-            RotationCenter = InitialPosition;
-            Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
-            Translation = new Vector3(0f, 0f, 0f);
-            ScalingCenter = InitialPosition;
-            Scaling = new Vector3(1f, 1f, 1f);
+            var objLoader = new ObjLoader();
+            var triangles = new TrianglePositionNormalTextureInput[0];
+            objLoader.LoadObjModel(device, objFilePath, out VertexBuffer, out VerticesCount, out Vertices, out triangles);
 
-            verticesCount = 1;
-            t = new VertexPositionNormalTexture[verticesCount];
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
-            ObjLoader objLoader = new ObjLoader();
-            objLoader.LoadObjModel(device, objFilePath, out vertexBuffer, out verticesCount, out t);
+            var r = GenerateTriangleAdjForShadowVolume(triangles);
 
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
+            VertexBuffer = Buffer.Create(device, BindFlags.VertexBuffer, Vertices);
 
-            var t1 = new VertexPositionNormalTexture[]
-            {
-                t[0],
-                t[1]
-            };
-            bufferForSO = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
+            Texture = TextureLoader.CreateTexture2DFromBitmap(device,
+                TextureLoader.LoadBitmap(new ImagingFactory2(), texturePath));
+            TextureView = new ShaderResourceView(device, Texture);
 
-            texture = TextureLoader.CreateTexture2DFromBitmap(device, TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), texturePath));
-            textureView = new ShaderResourceView(device, texture);
-
-            samplerStateDescription = new SamplerStateDescription
+            SamplerStateDescription = new SamplerStateDescription
             {
                 AddressU = TextureAddressMode.Wrap,
                 AddressV = TextureAddressMode.Wrap,
                 AddressW = TextureAddressMode.Wrap,
-                Filter = Filter.MinMagMipLinear,
+                Filter = Filter.MinMagMipLinear
             };
-            sampler = new SamplerState(device, samplerStateDescription);
+            Sampler = new SamplerState(device, SamplerStateDescription);
 
-            material = new Materials.Silver();
 
-            constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            matBuf = new Direct3D11.Buffer(device, Utilities.SizeOf<MaterialBufferStruct>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            worldBuf = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            projBuf = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            viewBuf = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            Material = new Silver();
 
-            shadowTransformBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-            shadowWorldBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+            InitializeResources();
+        }
 
-            MaterialBufStruct = new MaterialBufferStruct();
-            MaterialBufStruct.Absorption = new Vector4(material.Absorption, 0f);
-            MaterialBufStruct.Ambient = new Vector4(material.Ambient, 0f);
-            MaterialBufStruct.Diffuse = new Vector4(material.Diffuse, 0f);
-            MaterialBufStruct.Shiness = material.Shiness;
+        public TrianglePositionNormalTextureAdjInput[] GenerateTriangleAdjForShadowVolume(TrianglePositionNormalTextureInput[] trianglesPositionNormalTexture)
+        {
+            List<TrianglePositionNormalTextureAdjInput> ret = new List<TrianglePositionNormalTextureAdjInput>();
+            foreach (var trg1 in trianglesPositionNormalTexture)
+            {
+                var trgAdj = new TrianglePositionNormalTextureAdjInput
+                {
+                    Point2 = trg1.Point1,
+                    Point4 = trg1.Point2,
+                    Point6 = trg1.Point3
+                };
 
+                foreach (var trg2 in trianglesPositionNormalTexture)
+                {
+                    var vrt1Comp1 = (trg1.Point1.Position == trg2.Point1.Position) || (trg1.Point1.Position == trg2.Point2.Position) || (trg1.Point1.Position == trg2.Point3.Position);
+                    var vrt1Comp2 = (trg1.Point2.Position == trg2.Point1.Position) || (trg1.Point2.Position == trg2.Point2.Position) || (trg1.Point2.Position == trg2.Point3.Position);
+                    var vrt1Comp3 = (trg1.Point3.Position == trg2.Point1.Position) || (trg1.Point3.Position == trg2.Point2.Position) || (trg1.Point3.Position == trg2.Point3.Position);
+
+                    if (vrt1Comp1 && vrt1Comp2)
+                    {
+                        var vrt2Comp1 = (trg2.Point1.Position == trg1.Point1.Position) || (trg2.Point1.Position == trg1.Point2.Position);
+                        var vrt2Comp2 = (trg2.Point2.Position == trg1.Point1.Position) || (trg2.Point2.Position == trg1.Point2.Position);
+                        var vrt2Comp3 = (trg2.Point3.Position == trg1.Point1.Position) || (trg2.Point3.Position == trg1.Point2.Position);
+
+                        if (vrt2Comp1 && vrt2Comp2)
+                            trgAdj.Point3 = trg2.Point3;
+                        else if (vrt2Comp2 && vrt2Comp3)
+                            trgAdj.Point3 = trg2.Point1;
+                        else if (vrt2Comp3 && vrt2Comp1)
+                            trgAdj.Point3 = trg2.Point2;
+                    }
+                    else if (vrt1Comp2 && vrt1Comp3)
+                    {
+                        var vrt2Comp1 = (trg2.Point1.Position == trg1.Point2.Position) || (trg2.Point1.Position == trg1.Point3.Position);
+                        var vrt2Comp2 = (trg2.Point2.Position == trg1.Point2.Position) || (trg2.Point2.Position == trg1.Point3.Position);
+                        var vrt2Comp3 = (trg2.Point3.Position == trg1.Point2.Position) || (trg2.Point3.Position == trg1.Point3.Position);
+
+                        if (vrt2Comp1 && vrt2Comp2)
+                            trgAdj.Point5 = trg2.Point3;
+                        else if (vrt2Comp2 && vrt2Comp3)
+                            trgAdj.Point5 = trg2.Point1;
+                        else if (vrt2Comp3 && vrt2Comp1)
+                            trgAdj.Point5 = trg2.Point2;
+                    }
+                    else if (vrt1Comp1 && vrt1Comp3)
+                    {
+                        var vrt2Comp1 = (trg2.Point1.Position == trg1.Point3.Position) || (trg2.Point1.Position == trg1.Point1.Position);
+                        var vrt2Comp2 = (trg2.Point2.Position == trg1.Point3.Position) || (trg2.Point2.Position == trg1.Point1.Position);
+                        var vrt2Comp3 = (trg2.Point3.Position == trg1.Point3.Position) || (trg2.Point3.Position == trg1.Point1.Position);
+
+                        if (vrt2Comp1 && vrt2Comp2)
+                            trgAdj.Point1 = trg2.Point3;
+                        else if (vrt2Comp2 && vrt2Comp3)
+                            trgAdj.Point1 = trg2.Point1;
+                        else if (vrt2Comp3 && vrt2Comp1)
+                            trgAdj.Point1 = trg2.Point2;
+                    }
+                }
+
+                ret.Add(trgAdj);
+            }
+
+            return ret.ToArray();
         }
 
         public VertexPositionNormalTexture[] Transformation(VertexPositionNormalTexture[] vertices, Vector3 translation, Matrix rotation)
         {
             var ret = new VertexPositionNormalTexture[vertices.Length];
-            //transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, 1.0f, 1.0f), Quaternion.RotationMatrix(rotation), translation);
+            //Transform = Matrix.Transformation(new Vector3(0, 0, 0), Quaternion.Identity, new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, 1.0f, 1.0f), Quaternion.RotationMatrix(rotation), translation);
             var quat = Quaternion.RotationMatrix(Rotation);
-            //transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
-            Matrix.AffineTransformation(Scaling.X, ref RotationCenter, ref quat, ref Translation, out transform);
-            WorldPosition = Vector3.Transform(InitialPosition, transform);
-            for (int i = 0; i < vertices.Length; i++)
+            //Transform = Matrix.Transformation(ScalingCenter, Quaternion.Identity, Scaling, RotationCenter, Quaternion.RotationMatrix(Rotation), Translation);
+            Matrix.AffineTransformation(Scaling.X, ref RotationCenter, ref quat, ref Translation, out Transform);
+            WorldPosition = Vector3.Transform(InitialPosition, Transform);
+            for (var i = 0; i < vertices.Length; i++)
             {
-                ret[i].Position = Vector4.Transform(vertices[i].Position, transform);
-                ret[i].Normal = Vector4.Transform(vertices[i].Normal, transform);
+                ret[i].Position = Vector4.Transform(vertices[i].Position, Transform);
+                ret[i].Normal = Vector4.Transform(vertices[i].Normal, Transform);
                 ret[i].Texture = vertices[i].Texture;
             }
 
@@ -111,78 +127,77 @@ namespace SharpDX.Components
 
         public override void Update()
         {
-            t = Transformation(t, InitialPosition, Rotation);
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, t);
+            Vertices = Transformation(Vertices, InitialPosition, Rotation);
+            VertexBuffer = Buffer.Create(Device, BindFlags.VertexBuffer, Vertices);
         }
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view)
         {
-            if (!toStreamOutput)
+            var quat = Quaternion.RotationMatrix(Rotation);
+            Matrix.AffineTransformation(Scaling.X, ref RotationCenter, ref quat, ref Translation, out Transform);
+
+            var shdTr = Transform * ShadowTransform;
+
+            deviceContext.PixelShader.SetShaderResource(0, TextureView);
+            deviceContext.PixelShader.SetSampler(0, Sampler);
+
+            //Material Buffer
+            deviceContext.UpdateSubresource(ref MaterialBufStruct, MaterialBuf);
+            deviceContext.PixelShader.SetConstantBuffer(0, MaterialBuf);
+
+            //Matrix buffer
+            var matrixStruct = new MatrixBufferStruct
             {
-                var quat = Quaternion.RotationMatrix(Rotation);
-                Matrix.AffineTransformation(Scaling.X, ref RotationCenter, ref quat, ref Translation, out transform);
+                World = Transform,
+                View = view,
+                Proj = proj
+            };
+            deviceContext.UpdateSubresource(ref matrixStruct, MatricesBuf);
+            deviceContext.VertexShader.SetConstantBuffer(3, MatricesBuf);
 
-                var shdTr = transform * shadowTransform;
+            //ShadowBuf
+            deviceContext.UpdateSubresource(ref shdTr, ShadowTransformBuffer);
+            deviceContext.VertexShader.SetConstantBuffer(4, ShadowTransformBuffer);
 
-                deviceContext.PixelShader.SetShaderResource(0, textureView);
-                deviceContext.PixelShader.SetSampler(0, sampler);
-                //Material Buffer
-                deviceContext.UpdateSubresource(ref MaterialBufStruct, matBuf, 0);
-                deviceContext.PixelShader.SetConstantBuffer(0, matBuf);
-                //World buffer
-                deviceContext.UpdateSubresource(ref transform, worldBuf, 0);
-                deviceContext.VertexShader.SetConstantBuffer(4, worldBuf);
-                //View Buffer
-                deviceContext.UpdateSubresource(ref view, viewBuf, 0);
-                deviceContext.VertexShader.SetConstantBuffer(5, viewBuf);
-                //Proj Buffer
-                deviceContext.UpdateSubresource(ref proj, projBuf, 0);
-                deviceContext.VertexShader.SetConstantBuffer(6, projBuf);
-                //ShadowBuf
-                deviceContext.UpdateSubresource(ref shdTr, shadowTransformBuffer, 0);
-                deviceContext.VertexShader.SetConstantBuffer(7, shadowTransformBuffer);
+            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
+            deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
-                deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
-                deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            }
-            else
-            {
-                deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(bufferForSO, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
-                deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.PointList;
-            }
-
-            deviceContext.Draw(verticesCount, 0);                
+            deviceContext.Draw(VerticesCount, 0);
         }
 
-        public void DrawShadow(DeviceContext deviceContext, Matrix shadowTransform)
+        public override void DrawShadow(DeviceContext deviceContext, Matrix shadowTransform, Matrix lightProj, Matrix lightView)
         {
-            this.shadowTransform = shadowTransform;
+            ShadowTransform = shadowTransform;
 
             var quat = Quaternion.RotationMatrix(Rotation);
-            Matrix.AffineTransformation(Scaling.X, ref RotationCenter, ref quat, ref Translation, out transform);
-          
-            //World buffer
-            deviceContext.UpdateSubresource(ref transform, shadowWorldBuffer, 0);
-            deviceContext.VertexShader.SetConstantBuffer(2, shadowWorldBuffer);
+            Matrix.AffineTransformation(Scaling.X, ref RotationCenter, ref quat, ref Translation, out Transform);
 
-            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
+            //MAtrix buffer
+            var matrixStruct = new MatrixBufferStruct
+            {
+                World = Transform,
+                View = lightView,
+                Proj = lightProj
+            };
+            deviceContext.UpdateSubresource(ref matrixStruct, ShadowWorldBuffer);
+            deviceContext.VertexShader.SetConstantBuffer(0, ShadowWorldBuffer);
+
+            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
 
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            deviceContext.Draw(verticesCount, 0);
+            deviceContext.Draw(VerticesCount, 0);
         }
 
         public override void Dispose()
         {
-            vertexBuffer.Dispose();
-            sampler.Dispose();
-            texture.Dispose();
-            textureView.Dispose();
-            worldBuf.Dispose();
-            matBuf.Dispose();
-            viewBuf.Dispose();
-            projBuf.Dispose();
-            shadowWorldBuffer.Dispose();
-            constantBuffer.Dispose();
-        }        
+            VertexBuffer.Dispose();
+            Sampler.Dispose();
+            Texture.Dispose();
+            TextureView.Dispose();
+            MatricesBuf.Dispose();
+            MaterialBuf.Dispose();
+            ShadowWorldBuffer.Dispose();
+            ConstantBuffer.Dispose();
+        }
     }
 }

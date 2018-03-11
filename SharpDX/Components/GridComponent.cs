@@ -17,17 +17,14 @@ namespace SharpDX.Components
 {
     class GridComponent : AbstractComponent
     {
-        private int TerrainWidth = 100, TerrainHeight = 100;
-        private int VertexCount { get; set; }
-        public int IndexCount { get; private set; }
-
-        public Direct3D11.Buffer indexBuffer;
-
+        private int terrainWidth = 100, terrainHeight = 100;
+        private int VertexCount { get; }
+        public int IndexCount { get; }
 
         public GridComponent(Direct3D11.Device device)
         {
-            this.device = device;
-
+            this.Device = device;
+            
             InitialPosition = new Vector3(0f, 0f, 0f);
             RotationCenter = InitialPosition;
             Rotation = Matrix.RotationYawPitchRoll(0.0f, 0.0f, 0.0f);
@@ -35,34 +32,34 @@ namespace SharpDX.Components
             ScalingCenter = InitialPosition;
             Scaling = new Vector3(1f, 1f, 1f);
 
-            VertexCount = (TerrainWidth) * (TerrainHeight) * 8;
+            VertexCount = (terrainWidth) * (terrainHeight) * 8;
 
             IndexCount = VertexCount;
 
-            vertices = new Vector4[VertexCount*2];
+            InitialPoints = new Vector4[VertexCount*2];
 
             int[] indices = new int[IndexCount];
 
             int index = 0;
             int s = 0;
-            for (int j = 0; j < (TerrainHeight - 1); j++)
+            for (int j = 0; j < (terrainHeight - 1); j++)
             {
-                for (int i = 0; i < (TerrainWidth - 1); i++)
+                for (int i = 0; i < (terrainWidth - 1); i++)
                 {
                     // LINE 1
                     // Upper left.
                     float positionX = (float)i;
                     float positionZ = (float)(j + 1);
-                    vertices[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
-                    vertices[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                    InitialPoints[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
+                    InitialPoints[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     indices[s] = s;
                     index+=2;
                     s++;
                     // Upper right.
                     positionX = (float)(i + 1);
                     positionZ = (float)(j + 1);
-                    vertices[index] = new Vector4(positionX, 0.0f, positionZ,1.0f);
-                    vertices[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                    InitialPoints[index] = new Vector4(positionX, 0.0f, positionZ,1.0f);
+                    InitialPoints[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     indices[s] = s;
                     index += 2;
                     s++;
@@ -70,16 +67,16 @@ namespace SharpDX.Components
                     // Upper right.
                     positionX = (float)(i + 1);
                     positionZ = (float)(j + 1);
-                    vertices[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
-                    vertices[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                    InitialPoints[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
+                    InitialPoints[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     indices[s] = s;
                     index += 2;
                     s++;
                     // Bottom right.
                     positionX = (float)(i + 1);
                     positionZ = (float)j;
-                    vertices[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
-                    vertices[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                    InitialPoints[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
+                    InitialPoints[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     indices[s] = s;
                     index += 2;
                     s++;
@@ -87,16 +84,16 @@ namespace SharpDX.Components
                     // Bottom right.
                     positionX = (float)(i + 1);
                     positionZ = (float)j;
-                    vertices[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
-                    vertices[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                    InitialPoints[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
+                    InitialPoints[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     indices[s] = s;
                     index += 2;
                     s++;
                     // Bottom left.
                     positionX = (float)i;
                     positionZ = (float)j;
-                    vertices[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
-                    vertices[index+1]= new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                    InitialPoints[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
+                    InitialPoints[index+1]= new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     indices[s] = s;
                     index += 2;
                     s++;
@@ -104,26 +101,25 @@ namespace SharpDX.Components
                     // Bottom left.
                     positionX = (float)i;
                     positionZ = (float)j;
-                    vertices[index] = new Vector4(positionX, 0.0f, positionZ,1.0f);
-                    vertices[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                    InitialPoints[index] = new Vector4(positionX, 0.0f, positionZ,1.0f);
+                    InitialPoints[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     indices[s] = s;
                     index += 2;
                     s++;
                     // Upper left.
                     positionX = (float)i;
                     positionZ = (float)(j + 1);
-                    vertices[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
-                    vertices[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                    InitialPoints[index] = new Vector4(positionX, 0.0f, positionZ, 1.0f);
+                    InitialPoints[index+1] = new Color4(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     indices[s] = s;
                     index += 2;
                     s++;
                 }
             }
 
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, vertices);
-            constantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-            indexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, indices);
+            VertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, InitialPoints);
+            ConstantBuffer = new Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), Direct3D11.ResourceUsage.Default,
+                BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
         }
 
@@ -141,22 +137,27 @@ namespace SharpDX.Components
             return ret;
         }
 
+        public override void DrawShadow(DeviceContext deviceContext, Matrix shadowTransform, Matrix lightProj, Matrix lightView)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Update()
         {
-            vertices = Transformation(vertices, InitialPosition, Rotation);
-            vertexBuffer = Direct3D11.Buffer.Create(device, Direct3D11.BindFlags.VertexBuffer, vertices);
+            InitialPoints = Transformation(InitialPoints, InitialPosition, Rotation);
+            VertexBuffer = Direct3D11.Buffer.Create(Device, Direct3D11.BindFlags.VertexBuffer, InitialPoints);
         }
 
 
-        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view, bool toStreamOutput)
+        public override void Draw(DeviceContext deviceContext, Matrix proj, Matrix view)
         {
             var worldViewProj = view * proj;
 
-            deviceContext.UpdateSubresource(ref worldViewProj, constantBuffer, 0);
+            deviceContext.UpdateSubresource(ref worldViewProj, ConstantBuffer, 0);
 
-            deviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
+            deviceContext.VertexShader.SetConstantBuffer(0, ConstantBuffer);
 
-            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, Utilities.SizeOf<Vector4>()*2, 0));
+            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, Utilities.SizeOf<Vector4>()*2, 0));
 
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.LineList;
 
@@ -165,8 +166,8 @@ namespace SharpDX.Components
 
         public override void Dispose()
         {
-            vertexBuffer.Dispose();
-            constantBuffer.Dispose();
+            VertexBuffer.Dispose();
+            ConstantBuffer.Dispose();
         }
     }
 }
