@@ -22,10 +22,7 @@ namespace SharpDX.Lighting
         public Matrix Projection;
         public Matrix View;
         public Vector4 Target;
-        public float Attention;
-        public float Fov;
-        private float yaw;
-        private float pitch;
+
 
 
         public DirectionalLight(Vector4 position, float widht, float height, Color4 color, float intensity)

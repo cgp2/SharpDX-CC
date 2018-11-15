@@ -48,23 +48,19 @@ namespace SharpDX.Games
         private readonly Texture2D NormalMap;
         public RenderTargetView[] DefferedRenderTargets;
         public Texture2D[] DefferedTargetTextures;
-        private readonly RenderTargetView[] forwardRenderTargets;   
+        private readonly RenderTargetView[] forwardRenderTargets;
 
         private Viewport vpD;
         private DepthStencilView dpv;
         private Texture2D PlaneTexture;
         public ConsoleComponent consoleComponent;
 
-
         public LuaScriptManager LuaManager;
-
-
 
         public ShadowMapLightingGame()
         {
-            vpD = new Viewport(0, 0, 2048, 2048);
-           // InitializeShaders();
-            Camera = new CameraComponent((float) RenderForm.Width / RenderForm.Height, new Vector3(0, 7, -12), 180, 0);
+            vpD = new Viewport(0, 0, 512, 512);
+            Camera = new CameraComponent((float)RenderForm.Width / RenderForm.Height, new Vector3(0, 7, -12), 180, 0);
             shadowMap = new ShadowMap(GameDevice, SwapChain, SMapSize, SMapSize);
 
             var defferedMapDescr = new Texture2DDescription
@@ -86,22 +82,22 @@ namespace SharpDX.Games
             DepthMap = new Texture2D(GameDevice, defferedMapDescr);
             SpecularMap = new Texture2D(GameDevice, defferedMapDescr);
             NormalMap = new Texture2D(GameDevice, defferedMapDescr);
-            worldPositionMap = new Texture2D(GameDevice, defferedMapDescr); 
+            worldPositionMap = new Texture2D(GameDevice, defferedMapDescr);
 
-           var dd = new Texture2D(GameDevice, new Texture2DDescription()
+            var dd = new Texture2D(GameDevice, new Texture2DDescription()
             {
                 Format = Format.D32_Float_S8X24_UInt,
                 ArraySize = 1,
                 MipLevels = 1,
-                Width = 600,
-                Height = 600,
+                Width = 512,
+                Height = 512,
                 SampleDescription = new SampleDescription(1, 0),
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.DepthStencil,
                 CpuAccessFlags = CpuAccessFlags.None,
                 OptionFlags = ResourceOptionFlags.None
             });
-             
+
             // Create the depth buffer view
             dpv = new DepthStencilView(GameDevice, dd);
 
@@ -131,11 +127,9 @@ namespace SharpDX.Games
             PlaneTexture = worldPositionMap;
         }
 
-     
-
         public override void InitializeLight()
         {
-            directionalLight = new DirectionalLight(new Vector4(80f, 10f, 0f, 1f), 50, 50, Color.White, 10f);
+            directionalLight = new DirectionalLight(new Vector4(0, 10f, 0f, 1f), 400, 400, Color.White, 30f);
 
             lightBufferStruct = new LightBufferStruct
             {
@@ -161,21 +155,23 @@ namespace SharpDX.Games
             cow.InitializeResources(texturePath, new Silver(), shadersPath, shadersPath, InputElements.VertexPosNormTex, filePath);
             cow.Scaling = new Vector3(0.01f, 0.01f, 0.01f);
 
-
-
-
+            texturePath = Path.GetDirectoryName(location) + "\\Textures\\marble_texture2.jpg";
 
             string[] cubetexturesPath = new string[]{
+                Path.GetDirectoryName(location) + "\\Textures\\SkyText\\miramar_ft.bmp",
                 Path.GetDirectoryName(location) + "\\Textures\\SkyText\\miramar_bk.bmp",
                 Path.GetDirectoryName(location) + "\\Textures\\SkyText\\miramar_dn.bmp",
-                Path.GetDirectoryName(location) + "\\Textures\\SkyText\\miramar_ft.bmp",
+                Path.GetDirectoryName(location) + "\\Textures\\SkyText\\miramar_up.bmp",
                 Path.GetDirectoryName(location) + "\\Textures\\SkyText\\miramar_lf.bmp",
                 Path.GetDirectoryName(location) + "\\Textures\\SkyText\\miramar_rt.bmp",
-                Path.GetDirectoryName(location) + "\\Textures\\SkyText\\miramar_up.bmp",
+
             };
             skySphere = new FBXComponent(GameDevice);
             filePath = Path.GetDirectoryName(location) + "\\Meshes\\skySphere2.fbx";
             skySphere.InitializeResources(cubetexturesPath, shadersPath, shadersPath, InputElements.VertexPosNormTex, filePath);
+            skySphere.isLighten = false;
+            //  skySphere.InitializeResources(texturePath, new Silver(), shadersPath, shadersPath, InputElements.VertexPosNormTex, filePath);
+
             skySphere.Scaling = new Vector3(0.1f, 0.1f, 0.1f);
 
             plane = new PlaneComponent(GameDevice);
@@ -187,8 +183,8 @@ namespace SharpDX.Games
             consoleComponent = new ConsoleComponent();
             consoleComponent.Initialize(this);
 
-            LuaManager= new LuaScriptManager(this);
-          
+            LuaManager = new LuaScriptManager(this);
+
         }
 
         public void DrawComponentsDeffered(float deltaTime)
@@ -209,7 +205,7 @@ namespace SharpDX.Games
             cow.Draw(DeviceContext, DefferedRenderTargets, dpv, Camera.Proj, Camera.View, lightBufferStruct.Position, lightBufferStruct.Color, eyepos, lightBufferStruct.Intensity, PrimitiveTopology.TriangleList);
             grid.Draw(DeviceContext, DefferedRenderTargets, dpv, Camera.Proj, Camera.View, lightBufferStruct.Position, lightBufferStruct.Color, eyepos, lightBufferStruct.Intensity, PrimitiveTopology.TriangleList);
 
-            
+
         }
 
         public override void DrawComponents(float deltaTi)
@@ -222,13 +218,13 @@ namespace SharpDX.Games
             skySphere.ChangeShaders(shadersPath, shadersPath);
             skySphere.Draw(DeviceContext, forwardRenderTargets, DepthStencilView, Camera.Proj, Camera.View, lightBufferStruct.Position, lightBufferStruct.Color, eyepos, lightBufferStruct.Intensity, PrimitiveTopology.TriangleList);
             grid.Draw(DeviceContext, forwardRenderTargets, DepthStencilView, Camera.Proj, Camera.View, lightBufferStruct.Position, lightBufferStruct.Color, eyepos, lightBufferStruct.Intensity, PrimitiveTopology.TriangleList);
-           // cow.Draw(DeviceContext, forwardRenderTargets, DepthStencilView, Camera.Proj, Camera.View, lightBufferStruct.Position, lightBufferStruct.Color, eyepos, lightBufferStruct.Intensity, PrimitiveTopology.TriangleList);
+            // cow.Draw(DeviceContext, forwardRenderTargets, DepthStencilView, Camera.Proj, Camera.View, lightBufferStruct.Position, lightBufferStruct.Color, eyepos, lightBufferStruct.Intensity, PrimitiveTopology.TriangleList);
             // var normalmapView = new ShaderResourceView(GameDevice, shadowMap.DepthMap);
             var planeTextureView = new ShaderResourceView(GameDevice, PlaneTexture);
             plane.UpdateResources(planeTextureView);
-            plane.Draw(DeviceContext, forwardRenderTargets, DepthStencilView, Camera.Proj, Camera.View, directionalLight.WorldPosition, directionalLight.Color, eyepos, directionalLight.Intensity, PrimitiveTopology.TriangleList); 
+            plane.Draw(DeviceContext, forwardRenderTargets, DepthStencilView, Camera.Proj, Camera.View, directionalLight.WorldPosition, directionalLight.Color, eyepos, directionalLight.Intensity, PrimitiveTopology.TriangleList);
 
-            if(consoleComponent.IsEnabled)
+            if (consoleComponent.IsEnabled)
                 consoleComponent.Draw();
         }
 
@@ -240,12 +236,12 @@ namespace SharpDX.Games
         private int k = 0;
         public void ChangeDefferedTarget()
         {
-            k = k != DefferedTargetTextures.Length-1 ? k + 1 : 0;      
-            PlaneTexture = DefferedTargetTextures[k]; 
+            k = k != DefferedTargetTextures.Length - 1 ? k + 1 : 0;
+            PlaneTexture = DefferedTargetTextures[k];
         }
 
         public override void Draw(float deltaTime)
-        {       
+        {
             DrawShadowMap();
 
             //Draw main components
@@ -264,7 +260,7 @@ namespace SharpDX.Games
 
             //DeviceContext.UpdateSubresource(ref lightBufferStruct, lightBuf);
             //DeviceContext.PixelShader.SetConstantBuffer(2, lightBuf);
-          //   DrawComponentsDeffered(deltaTime);
+            //   DrawComponentsDeffered(deltaTime);
 
             var samplerStateDescription = new SamplerStateDescription
             {
@@ -277,11 +273,11 @@ namespace SharpDX.Games
             };
             var shadowMapSampler = new SamplerState(GameDevice, samplerStateDescription);
             DeviceContext.PixelShader.SetSampler(1, shadowMapSampler);
-           // DeviceContext.PixelShader.SetShaderResource(1, shadowMapResourseView);
+            DeviceContext.PixelShader.SetShaderResource(1, shadowMapResourseView);
 
             DrawComponents(deltaTime);
             base.Draw(deltaTime);
-        } 
+        }
 
         public override void InitializeBuffers()
         {
@@ -358,18 +354,18 @@ namespace SharpDX.Games
 
             shadowMapResourseView = new ShaderResourceView(GameDevice, shadowMap.DepthMap);
         }
-         
+
         public void BindComponents()
         {
             DeviceContext.Rasterizer.SetViewport(Viewport);
             DeviceContext.OutputMerger.SetTargets(DepthStencilView, RenderTargetView);
 
-         //   DeviceContext.InputAssembler.InputLayout = InputLayoutMain;
+            //   DeviceContext.InputAssembler.InputLayout = InputLayoutMain;
         }
 
         public override void KeyPressed(Keys key)
         {
-            if(!consoleComponent.IsEnabled)
+            if (!consoleComponent.IsEnabled)
             {
                 switch (key)
                 {
@@ -433,7 +429,7 @@ namespace SharpDX.Games
 
         public override void MouseMoved(float x, float y)
         {
-            if(!consoleComponent.IsEnabled)
+            if (!consoleComponent.IsEnabled)
                 Camera.ChangeTargetPosition(x, y);
         }
     }

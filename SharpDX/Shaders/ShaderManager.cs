@@ -68,7 +68,8 @@ namespace SharpDX
         public struct FlagsBuf
         {
             public float IsTextureCube;
-            private float dum1, dum2, dum3;
+            public float IsLighten;
+            private float dum1, dum2;
         }
 
         protected Direct3D11.Buffer ShadowTransformBuffer;
@@ -242,12 +243,12 @@ namespace SharpDX
                            Matrix view, Matrix proj, Matrix world,
                            Vector4 lightPos, Vector4 lightCol, Vector4 eyePos, float lightIntens,
                            AbstractMaterial mat,
-                           ShaderResourceView texture, bool isTextureCube,
+                           ShaderResourceView texture, bool isTextureCube, bool isLighten,
                            PrimitiveTopology topology,
                            int vertexCount, bool withShadowMap = true)
         {
 
-            SetParameters(deviceContext, view, proj, world, lightPos, lightCol, eyePos, lightIntens, mat, texture, isTextureCube);
+            SetParameters(deviceContext, view, proj, world, lightPos, lightCol, eyePos, lightIntens, mat, texture, isTextureCube, isLighten);
 
             if (withShadowMap)
             {
@@ -285,7 +286,7 @@ namespace SharpDX
         protected void SetParameters(DeviceContext deviceContext, Matrix view, Matrix proj, Matrix world,
                                     Vector4 lightPos, Vector4 lightCol, Vector4 eyePos, float lightIntensity,
                                     AbstractMaterial mat,
-                                    ShaderResourceView texture, bool isTextureCube)
+                                    ShaderResourceView texture, bool isTextureCube, bool isLighten)
         {
             MatrixRes = new MatrixBuf()
             {
@@ -312,7 +313,8 @@ namespace SharpDX
 
             FlagsRes = new FlagsBuf()
             {
-                IsTextureCube = isTextureCube ? 1.0f : 0.0f
+                IsTextureCube = isTextureCube ? 1.0f : 0.0f,
+                IsLighten = isLighten ? 1.0f : 0.0f
             };
 
             deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(VertexBuffer, InputTypeSize, 0));
@@ -327,7 +329,7 @@ namespace SharpDX
             deviceContext.PixelShader.SetConstantBuffer(2, MaterialBuffer);
 
             deviceContext.UpdateSubresource(ref FlagsRes, FlagsBuffer);
-            deviceContext.PixelShader.SetConstantBuffer(3, FlagsBuffer);
+            deviceContext.PixelShader.SetConstantBuffer(4, FlagsBuffer);
 
             if (!isTextureCube)
             {
@@ -335,7 +337,7 @@ namespace SharpDX
             }
             else
             {
-                deviceContext.PixelShader.SetShaderResource(3, texture);
+                deviceContext.PixelShader.SetShaderResource(2, texture);
 
             }
             deviceContext.PixelShader.SetSampler(0, Sampler);

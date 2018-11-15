@@ -31,8 +31,8 @@ namespace SharpDX
         protected InputDevice InputDevice;
         protected SwapChain SwapChain;
 
-        protected const int Width = 800;
-        protected const int Height = 800;
+        protected const int Width = 1024;
+        protected const int Height = 700;
 
         protected Direct3D11.Buffer VertexBuffer;
         protected Direct3D11.PixelShader PixelShader;
@@ -61,7 +61,7 @@ namespace SharpDX
 
         protected Game()
         {
-            RenderForm = new RenderForm("Default3D")
+            RenderForm = new RenderForm("KekKok")
             {
                 ClientSize = new Size(Width, Height),
                 AllowUserResizing = false

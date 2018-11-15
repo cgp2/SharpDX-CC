@@ -59,6 +59,7 @@ namespace SharpDX.Components
         public ShaderManager ShadowShaderManager;
 
         public bool isTextureCube = false;
+        public bool isLighten = true;
 
         protected AbstractComponent(Device device)
         {
@@ -111,26 +112,27 @@ namespace SharpDX.Components
 
             Material = new Materials.Silver();
 
-
-            Texture2D texture2D = new Texture2D(Device, new Texture2DDescription
-            {
-                ArraySize = 6,
-                MipLevels = 1,
-                Height = 512,
-                Width = 512,
-                CpuAccessFlags = CpuAccessFlags.None,
-                Format = DXGI.Format.R32G32B32A32_UInt,
-                BindFlags = BindFlags.ShaderResource,
-                OptionFlags = ResourceOptionFlags.TextureCube,
-                SampleDescription = new DXGI.SampleDescription(1, 0),
-                Usage = ResourceUsage.Default //!!
-            });
+            
 
             List<Texture2D> temttext = new List<Texture2D>();
             foreach(string texturePath in cubetexturePath)
             {
                 temttext.Add(TextureLoader.CreateTexture2DFromBitmap(Device, TextureLoader.LoadBitmap(new ImagingFactory2(), texturePath)));
             }
+
+            Texture2D texture2D = new Texture2D(Device, new Texture2DDescription
+            {
+                ArraySize = 6,
+                MipLevels = 1,
+                Height = temttext[0].Description.Height,
+                Width = temttext[0].Description.Width,
+                CpuAccessFlags = CpuAccessFlags.None,
+                Format = DXGI.Format.R8G8B8A8_UNorm,
+                BindFlags = BindFlags.ShaderResource,
+                OptionFlags = ResourceOptionFlags.TextureCube,
+                SampleDescription = new DXGI.SampleDescription(1, 0),
+                Usage = ResourceUsage.Default //!!
+            });
 
             TexturesCube = temttext.ToArray();
 
@@ -351,7 +353,12 @@ namespace SharpDX.Components
                 MainShaderManager.ShadowTransform = ShadowTransform;
             }
 
-            MainShaderManager.Render(deviceContext, renderTargetViews, depthStencilView, view, proj, Transform, lightPos, lightColor, eyePos, lightIntens, Material, TextureView, isTextureCube, topology, VerticesCount, withShadowMap);
+            MainShaderManager.Render(deviceContext, renderTargetViews, depthStencilView, 
+                                     view, proj, Transform,
+                                     lightPos, lightColor, eyePos, lightIntens, 
+                                     Material, TextureView, isTextureCube, isLighten,
+                                     topology, VerticesCount, 
+                                     withShadowMap);
         }
 
         public void DrawShadowMap(DeviceContext deviceContext, RenderTargetView[] renderTargetViews, DepthStencilView depthStencilView,
