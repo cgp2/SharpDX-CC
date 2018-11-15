@@ -23,7 +23,7 @@ namespace SharpDX
     {
         static void Main(string[] args)
         {
-            using (var game = new Games.LightingGame())
+            using (var game = new Games.ShadowMapLightingGame())
             {
                 game.Run();
             }

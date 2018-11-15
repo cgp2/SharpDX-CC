@@ -14,7 +14,7 @@ namespace SharpDX
         public Vector3 EyePosition, TargetPosition, UpVector;
         public float Fov, Aspect;
 
-        private float yaw = 0, pitch = 0;
+        private float yaw, pitch;
 
         public CameraComponent(float aspect, Vector3 pos, float yaw, float pitch)
         {
@@ -81,6 +81,22 @@ namespace SharpDX
             Vector3 scale = Vector3.Multiply(RotMatrix.Left, 1.3f);
             EyePosition += scale;
             TargetPosition += scale;
+
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
+        }
+
+        public void MoveDown()
+        {
+            EyePosition.Y -= 1.3f;
+            TargetPosition.Y -= 1.3f;
+
+            View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
+        }
+
+        public void MoveUp()
+        {
+            EyePosition.Y += 1.3f;
+            TargetPosition.Y += 1.3f;
 
             View = Matrix.LookAtLH(EyePosition, TargetPosition, RotMatrix.Up);
         }

@@ -16,7 +16,6 @@ SamplerState samplLinear
 	Filter = MIN_MAG_MIP_LINEAR;
 	AddressU = Wrap;
 	AddressV = Wrap;
-
 }; 
 
 struct VS_IN

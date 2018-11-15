@@ -46,13 +46,13 @@ namespace SharpDX.Components
 
         private readonly VertexPositionNormalTexture[] vertices;
 
-        public SoComponent(Device device, VertexPositionNormalTexture[] vertices)
+        public SoComponent(Device device, VertexPositionNormalTexture[] vertices, string geometryShaderName, string pixelShaderName)
         {
             this.vertices = vertices;
             bufferForSo = Buffer.Create(device, BindFlags.VertexBuffer, this.vertices);
 
             var location = Assembly.GetExecutingAssembly().Location;
-            var path = Path.GetDirectoryName(location) + "\\Shaders\\MiniCube.fx";
+            var path = Path.GetDirectoryName(location) + "\\Shaders\\" + pixelShaderName;
 
             using (var vertexShaderByteCode =
                 ShaderBytecode.CompileFromFile(path, "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
@@ -67,7 +67,7 @@ namespace SharpDX.Components
                 colorPixelShader = new PixelShader(device, pixelShaderByteCode);
             }
 
-            path = Path.GetDirectoryName(location) + "\\Shaders\\GeometryShader.hlsl";
+            path = Path.GetDirectoryName(location) + "\\Shaders\\" + geometryShaderName;
             using (var geometryShaderByteCode = ShaderBytecode.CompileFromFile(path, "GS", "gs_5_0", ShaderFlags.PackMatrixRowMajor))
             {
                 StreamOutputElement[] streamOutput =
@@ -163,8 +163,7 @@ namespace SharpDX.Components
         {
             BindComponentsSoStage(deviceContext);
 
-            deviceContext.InputAssembler.SetVertexBuffers(0,
-                new VertexBufferBinding(bufferForSo, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
+            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(bufferForSo, Utilities.SizeOf<VertexPositionNormalTexture>(), 0));
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.PointList;
 
             deviceContext.Draw(vertices.Count(), 0);
@@ -178,9 +177,8 @@ namespace SharpDX.Components
             deviceContext.UpdateSubresource(ref viewProj, constantBufferColor, 0);
             deviceContext.VertexShader.SetConstantBuffer(0, constantBufferColor);
 
-            deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleListWithAdjacency;
-            deviceContext.InputAssembler.SetVertexBuffers(0,
-                new VertexBufferBinding(soBuffer, Utilities.SizeOf<VertexPositionColor>(), 0));
+            deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.LineList;
+            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(soBuffer, Utilities.SizeOf<VertexPositionColor>(), 0));
 
             deviceContext.DrawAuto();
         }

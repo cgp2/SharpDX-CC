@@ -14,7 +14,7 @@ namespace SharpDX
 {
     public class ObjLoader
     {
-        public void LoadObjModel(SharpDX.Direct3D11.Device device, string fileName, out Buffer vertexBuffer, out int verticesCount, out VertexPositionNormalTexture[] vertices, out InputStructures.TrianglePositionNormalTextureInput[] trianglesPositionNormalTexture)
+        public void LoadObjModel(SharpDX.Direct3D11.Device device, string fileName, out Buffer vertexBuffer, out int verticesCount, out VertexPositionNormalTexture[] vertices, out InputStructures.TriangleInput[] trianglesPositionNormalTexture)
         {
             vertexBuffer = null;
             verticesCount = 0;
@@ -29,7 +29,7 @@ namespace SharpDX
             var texCoords = new List<Vector2>();
 
             var vertList = new List<VertexPositionNormalTexture>();
-            var trgList = new List<InputStructures.TrianglePositionNormalTextureInput>();
+            var trgList = new List<InputStructures.TriangleInput>();
 
             var lines = File.ReadAllLines(fileName);
             for (int i = 0; i < lines.Length; i++)
@@ -69,7 +69,7 @@ namespace SharpDX
                             vertList.Add(v1);
                             vertList.Add(v2);
 
-                            trgList.Add((new InputStructures.TrianglePositionNormalTextureInput(){Point1 = v0, Point2 = v1, Point3 = v2}));
+                            trgList.Add((new InputStructures.TriangleInput(){Point0 = v0, Point1 = v1, Point2 = v2}));
                         }
 
                         break;

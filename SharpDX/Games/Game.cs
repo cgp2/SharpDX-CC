@@ -15,6 +15,7 @@ using SharpDX.RawInput;
 using SharpDX.Multimedia;
 using System.Windows.Forms;
 
+
 namespace SharpDX
 {
     public abstract class Game 
@@ -22,6 +23,7 @@ namespace SharpDX
         public Direct3D11.Device GameDevice;
         public RenderForm RenderForm;
         public CameraComponent Camera;
+        public static ObjLoader ObjLoader;
 
         public Direct3D11.DeviceContext DeviceContext;
         protected RenderTargetView RenderTargetView;
@@ -37,8 +39,10 @@ namespace SharpDX
         protected Viewport Viewport;
         protected ShaderSignature InputSignature;
         protected Direct3D11.InputLayout InputLayoutMain;
-
-        protected Factory Factory;
+        protected Texture2D depthBuffer;
+        protected DepthStencilView DepthStencilView;
+        protected DXGI.Factory Factory;
+        public Texture2D BackBufer;
 
         protected SwapChainDescription SwapChainDescriptor;
 
@@ -49,6 +53,9 @@ namespace SharpDX
         };
 
         public bool IsActive => true;
+        protected Stopwatch FrameTimer;
+        private float tempTime;
+        private float deltaTime;
 
         protected List<Components.AbstractComponent> Components = new List<Components.AbstractComponent>();
 
@@ -61,6 +68,8 @@ namespace SharpDX
             };
             InitializeDeviceResources();
 
+            ObjLoader = new ObjLoader();
+            
             InputDevice = new InputDevice(this);
         }
 
@@ -79,21 +88,51 @@ namespace SharpDX
                 Usage = Usage.RenderTargetOutput,
             };
 
-            Direct3D11.Device.CreateWithSwapChain(DriverType.Hardware, Direct3D11.DeviceCreationFlags.None, SwapChainDescriptor, out GameDevice, out SwapChain);
+            Direct3D11.Device.CreateWithSwapChain(DriverType.Hardware, Direct3D11.DeviceCreationFlags.BgraSupport, SwapChainDescriptor, out GameDevice, out SwapChain);
             DeviceContext = GameDevice.ImmediateContext;
 
             Viewport = new Viewport(0, 0, Width, Height, 0.0f, 1.0f);
             DeviceContext.Rasterizer.SetViewport(Viewport);
 
-            Factory = SwapChain.GetParent<Factory>();
+            Factory = SwapChain.GetParent<SharpDX.DXGI.Factory>();
             //factory.MakeWindowAssociation(renderForm.Handle, WindowAssociationFlags.IgnoreAll);
 
-            using (Direct3D11.Texture2D backBuffer = SwapChain.GetBackBuffer<Direct3D11.Texture2D>(0))
-            {
-                RenderTargetView = new RenderTargetView(GameDevice, backBuffer);
-            }
+            BackBufer = SwapChain.GetBackBuffer<Direct3D11.Texture2D>(0);
+            RenderTargetView = new RenderTargetView(GameDevice, BackBufer);
         }
 
+        public abstract void InitializeLight();
+        public abstract void InitializeComponents();
+        public abstract void InitializeBuffers();
+        public abstract void DrawComponents(float deltaTime);
+
+        public abstract void ShutdownGame();
+
+        public virtual void RenderCallback()
+        {
+            DeviceContext.ClearDepthStencilView(DepthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
+            DeviceContext.ClearRenderTargetView(RenderTargetView, Color.Black);
+
+            deltaTime = FrameTimer.ElapsedMilliseconds;
+            Draw(deltaTime - tempTime);
+            tempTime = deltaTime;
+        }
+
+        public virtual void Run()
+        {
+            InitializeBuffers();
+            InitializeLight();
+            InitializeComponents();
+
+            FrameTimer = new Stopwatch();
+            FrameTimer.Start();
+            RenderLoop.Run(RenderForm, RenderCallback);
+        }
+
+        public virtual void Draw(float deltaTime)
+        {
+            SwapChain.Present(1, PresentFlags.None);
+        }
 
         protected void InitializeShaders()
         { 
@@ -123,21 +162,21 @@ namespace SharpDX
         {
             public Vector4 Position;
             public Vector4 Color;
+            public Vector4 EyePos;
             public float Intensity;
             public float Dum1, Dum2, Dum3;
         }
 
         public void DisposeBase()
         {
+            BackBufer.Dispose();
             RenderForm.Dispose();
             RenderTargetView.Dispose();
             GameDevice.Dispose();
             SwapChain.Dispose();
             DeviceContext.Dispose();
-            VertexShader.Dispose();
-            PixelShader.Dispose();
-            InputLayoutMain.Dispose();
-            InputSignature.Dispose();
+            //InputLayoutMain.Dispose();
+           // InputSignature.Dispose();
         }
     }
 }

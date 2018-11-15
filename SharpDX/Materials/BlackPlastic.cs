@@ -13,7 +13,7 @@ namespace SharpDX.Materials
             Diffuse = new Vector3(0.1f, 0.1f, 0.1f);
             Absorption = new Vector3(0.5f, 0.5f, 0.5f);
             Ambient = new Vector3(0f, 0f, 0f) ;
-            Shiness = 32f;
+            Shiness = 2f;
         }
     }
 }

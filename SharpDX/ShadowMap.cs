@@ -19,17 +19,14 @@ namespace SharpDX
     class ShadowMap : IDisposable
     {
         //public Texture2D shadowMap;
-        public RenderTargetView RenderTargetView;
+        public RenderTargetView[] RenderTargetViews;
         public DepthStencilView DepthMapDsv;
         private Direct3D11.Device device;
-        private Viewport viewport;
+        private readonly Viewport viewport;
         private readonly int width;
         private readonly int height;
         public Texture2D DepthMap = null;
-        ShaderSignature shadowInputShaderSignature;
-        Direct3D11.VertexShader shadowVertexShader;
-        Direct3D11.PixelShader shadowPixelShader;
-        InputLayout shadowInputLayout;
+
 
 
         public Texture2D DsvText;
@@ -67,16 +64,10 @@ namespace SharpDX
 
             DepthMap = new Texture2D(device, depthDesc);
 
-            RenderTargetView = new RenderTargetView(device, DepthMap);
-
-            //dsvDesc = new DepthStencilViewDescription
-            //{
-            //    Flags = DepthStencilViewFlags.None,
-            //    Format = Format.D24_UNorm_S8_UInt,
-            //    Dimension = DepthStencilViewDimension.Texture2D,
-            //};
-
-            //depthMapDSV = new DepthStencilView(GameDevice, depthMap, dsvDesc);
+            RenderTargetViews = new []
+            {
+               new RenderTargetView(device, DepthMap)
+            };
 
             DsvText = new Texture2D(device, new Texture2DDescription()
             {
@@ -107,44 +98,38 @@ namespace SharpDX
             //};
             //shaderResourceView = new ShaderResourceView(GameDevice, DSVText, shaderResourseViewDesc);
 
-            var location = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            var path = Path.GetDirectoryName(location).ToString() + "\\Shaders\\ShadowMapShaders.hlsl";
-            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(path, "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
-            {
-                shadowInputShaderSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
-                shadowVertexShader = new Direct3D11.VertexShader(device, vertexShaderByteCode);
-            }
+            //var location = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            //var path = Path.GetDirectoryName(location) + "\\Shaders\\ShadowMapShaders.hlsl";
+            //using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(path, "VS", "vs_5_0", ShaderFlags.PackMatrixRowMajor))
+            //{
+            //    shadowInputShaderSignature = ShaderSignature.GetInputSignature(vertexShaderByteCode);
+            //    shadowVertexShader = new Direct3D11.VertexShader(device, vertexShaderByteCode);
+            //}
 
-            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(path, "PS", "ps_5_0", ShaderFlags.PackMatrixRowMajor))
-            {
-                shadowPixelShader = new Direct3D11.PixelShader(device, pixelShaderByteCode);
-            }
+            //using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(path, "PS", "ps_5_0", ShaderFlags.PackMatrixRowMajor))
+            //{
+            //    shadowPixelShader = new Direct3D11.PixelShader(device, pixelShaderByteCode);
+            //}
 
-            shadowInputLayout = new InputLayout(device, shadowInputShaderSignature, inputElements);
+            //shadowInputLayout = new InputLayout(device, shadowInputShaderSignature, inputElements);
         }
 
         public void BindComponents(DeviceContext deviceContext)
         {
-            deviceContext.VertexShader.Set(shadowVertexShader);
-            deviceContext.PixelShader.Set(shadowPixelShader);
-            deviceContext.GeometryShader.Set(null);
-
             deviceContext.Rasterizer.SetViewport(viewport);
-            deviceContext.OutputMerger.SetRenderTargets(RenderTargetView);
+           // deviceContext.OutputMerger.SetRenderTargets(RenderTargetView);
             deviceContext.ClearDepthStencilView(DepthMapDsv, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1f, 0);
-            deviceContext.ClearRenderTargetView(RenderTargetView, Color.White);
-
-            deviceContext.InputAssembler.InputLayout = shadowInputLayout;
+            deviceContext.ClearRenderTargetView(RenderTargetViews[0], Color.White);
         }
 
         public void Dispose()
         {
-            shadowVertexShader.Dispose();
-            shadowPixelShader.Dispose();
-            shadowInputLayout.Dispose();
-            shadowInputShaderSignature.Dispose();
+            
             DepthMapDsv.Dispose();
-            RenderTargetView.Dispose();
+            foreach (var renderTarget in RenderTargetViews)
+            {
+               renderTarget.Dispose();
+            }      
         }
     }
 }

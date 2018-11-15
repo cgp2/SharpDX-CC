@@ -7,6 +7,7 @@ using SharpDX;
 using SharpDX.RawInput;
 using SharpDX.Multimedia;
 using System.Windows.Forms;
+using NLua;
 
 namespace SharpDX
 {

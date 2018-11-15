@@ -39,7 +39,7 @@ namespace SharpDX.Lighting
 
             View = Matrix.LookAtLH((Vector3)WorldPosition, (Vector3)Target, (Vector3)up);
             //Projection = Matrix.PerspectiveFovLH(MathUtil.DegreesToRadians(fov), 1.0f, 1f, 100);
-            Projection = Matrix.OrthoLH(50, 50, 0.1f, 500);
+            Projection = Matrix.OrthoLH(widht, height, 0.1f, 500);
 
             ShadowTransform = View * Projection;
         }

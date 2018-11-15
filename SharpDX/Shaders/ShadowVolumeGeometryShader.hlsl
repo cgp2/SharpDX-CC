@@ -1,6 +1,18 @@
-﻿cbuffer LightPosition
+﻿cbuffer LightPosition : register(b0)
 {
     float4 LightPosition;
+};
+
+struct TransformMatrices
+{
+    float4x4 World;
+    float4x4 View;
+    float4x4 Proj;
+};
+
+cbuffer MATRICESBUF : register(b3)
+{
+    TransformMatrices matrices;
 };
 
 struct VS_IN
@@ -17,6 +29,7 @@ struct GS_IN
 	float4 col : COLOR;
 };
 
+
 GS_IN VS(VS_IN input)
 {
 	GS_IN output = (GS_IN)0;
@@ -29,7 +42,7 @@ GS_IN VS(VS_IN input)
 }
 
 [maxvertexcount(12)]
-void GS(triangle GS_IN input[6], inout PointStream<GS_IN> stream)
+void GS(triangleadj GS_IN input[6], inout LineStream<GS_IN> stream)
 {
 	GS_IN p0 = input[0];
 	GS_IN p1 = input[1];
@@ -38,37 +51,149 @@ void GS(triangle GS_IN input[6], inout PointStream<GS_IN> stream)
     GS_IN p4 = input[4];
     GS_IN p5 = input[5];
 
-    float4 dif1 = p1.pos - p3.pos;
-    float4 dif2 = p5.pos - p1.pos;
+    GS_IN temp = input[0];
 
-    float4 norm1 = dif1 * dif2;
-    norm1 = normalize(norm1);
-    float4 v1 = LightPosition - p1.pos;
-    v1 = normalize(v1);
+    float3 dif1 = p2.pos - p4.pos;
+    float3 dif2 = p2.pos - p0.pos;
+    float3 norm1 = normalize(cross(dif1, dif2));
+    //float3 v1 = normalize(p2.pos - LightPosition);
+    float3 v1 = normalize(LightPosition);
+    float angle1 = dot(v1, norm1);
 
-    float angle1 = acos(dot(v1, norm1));
-
-    [branch] if(angle1 < 90)
+    if(angle1 < 0)
     {
-        dif1 = p0.pos - p1.pos;
-        dif2 = p0.pos - p5.pos;
+        dif1 = p1.pos - p2.pos;
+        dif2 = p1.pos - p0.pos;
+        norm1 = normalize(cross(dif1, dif2));
+        v1 = normalize(p1.pos - LightPosition);
+        angle1 = dot(v1, norm1);
 
-        float4 norm1 = dif1 * dif2;
-        norm1 = normalize(norm1);
-        float4 v1 = LightPosition - p1.pos;
-        v1 = normalize(v1);
-        float angle1 = acos(dot(v1, norm1));
+        temp.pos = float4(dif1, 1);
+        stream.Append(p1);
+        stream.Append(p0);
+      
+        if (angle1 > 0)
+        {
+            stream.Append(p1);
+            GS_IN t1 = p1;
+            t1.pos.w = 0;
+            t1.pos = length(t1.pos) * t1.pos;
+            stream.Append(t1);
+
+            stream.Append(p2);
+            GS_IN t2 = p2;
+            t2.pos.w = 0;
+            t2.pos = length(t2.pos) * t2.pos;
+            stream.Append(t2);
+        }
+
+        dif1 = p3.pos - p2.pos;
+        dif2 = p3.pos - p4.pos;
+        norm1 = normalize(cross(dif1, dif2));
+      //  v1 = normalize(p3.pos - LightPosition);
+        angle1 = dot(v1, norm1);
+
+        if (angle1 >= 0)
+        {
+            stream.Append(p3);
+            GS_IN t1 = p3;
+            t1.pos.w = 0;
+            t1.pos = length(t1.pos) * t1.pos;
+           // stream.Append(t1);
+
+            stream.Append(p2);
+            GS_IN t2 = p2;
+            t2.pos.w = 0;
+            t2.pos = length(t2.pos) * t2.pos;
+            stream.Append(p1);
+        }
+
+        dif1 = p5.pos - p0.pos;
+        dif2 = p5.pos - p4.pos;
+        norm1 = normalize(cross(dif1, dif2));
+      //  v1 = normalize(p5.pos - LightPosition);
+        angle1 = dot(v1, norm1);
+
+        if (angle1 >= 0)
+        {
+            stream.Append(p5);
+            GS_IN t1 = p5;
+            t1.pos.w = 0;
+            t1.pos = length(t1.pos) * t1.pos;
+            stream.Append(t1);
+
+            stream.Append(p2);
+            GS_IN t2 = p2;
+            t2.pos.w = 0;
+            t2.pos = length(t2.pos) * t2.pos;
+            stream.Append(t2);
+        }
     }
     else
     {
+        dif1 = p1.pos - p2.pos;
+        dif2 = p1.pos - p0.pos;
+        norm1 = normalize(cross(dif1, dif2));
+      //  v1 = normalize(p1.pos - LightPosition);
+        angle1 = dot(v1, norm1);
 
+        if (angle1 < 0)
+        {
+            stream.Append(p1);
+            GS_IN t1 = p1;
+            t1.pos.w = 0;
+            t1.pos = length(t1.pos) * t1.pos;
+            stream.Append(t1);
+
+            stream.Append(p2);
+            GS_IN t2 = p2;
+            t2.pos.w = 0;
+            t2.pos = length(t2.pos) * t2.pos;
+            stream.Append(t2);
+        }
+
+        dif1 = p3.pos - p2.pos;
+        dif2 = p3.pos - p4.pos;
+        norm1 = normalize(cross(dif1, dif2));
+     //   v1 = normalize(p3.pos - LightPosition);
+        angle1 = dot(v1, norm1);
+
+        if (angle1 < 0)
+        {
+            stream.Append(p3);
+            GS_IN t1 = p3;
+            t1.pos.w = 0;
+            t1.pos = length(t1.pos) * t1.pos;
+            stream.Append(t1);
+
+            stream.Append(p2);
+            GS_IN t2 = p2;
+            t2.pos.w = 0;
+            t2.pos = length(t2.pos) * t2.pos;
+            stream.Append(t2);
+        }
+
+        dif1 = p5.pos - p0.pos;
+        dif2 = p5.pos - p4.pos;
+        norm1 = normalize(cross(dif1, dif2));
+    //    v1 = normalize(p5.pos - LightPosition);
+        angle1 = dot(v1, norm1);
+
+        if (angle1 < 0)
+        {
+            stream.Append(p5);
+            GS_IN t1 = p5;
+            t1.pos.w = 0;
+            t1.pos = length(t1.pos) * t1.pos;
+            stream.Append(t1);
+
+            stream.Append(p2);
+            GS_IN t2 = p2;
+            t2.pos.w = 0;
+            t2.pos = length(t2.pos) * t2.pos;
+            stream.Append(t2);
+        }
     }
-    
-	p1.pos += float4(2, 0, 0, 0);
-	p2.pos += float4(0, 2, 0, 0);
-
-	stream.Append(p0);
-	stream.Append(p1);
-
-    stream.RestartStrip();
+   
+    //stream.RestartStrip();
 }
